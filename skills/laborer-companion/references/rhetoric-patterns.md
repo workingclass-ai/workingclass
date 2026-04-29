@@ -181,3 +181,13 @@ If the user's shared text is mostly this kind of communication, tell them so. Cr
 - 1844 Marx, *Economic and Philosophic Manuscripts* (alienation theory)
 
 This document will be updated as new patterns emerge.
+
+---
+
+## 相关模块 / Related modules
+
+- 加班场景里的话术（"team needs you", "family"）→ `overtime-analysis.md`
+- 绩效 review 里的"模糊期待"话术 → `performance-review-patterns.md`
+- 这些话术的历史来源 → `historical-cases.md`
+- 实际案例 → `case-studies.md` 案例1（PIP 前夜）、案例2（offer 谈判）、案例6（多年低薪）
+- 如果话术升级到"软推出"信号 → `red-flag-scanner.md` + `pip-survival-playbook.md`

@@ -352,3 +352,12 @@ For Chinese readers also:
 History doesn't repeat, but it often rhymes.
 
 Hearing history's rhyme is the first step to facing the present.
+
+---
+
+## 相关模块 / Related modules
+
+- 当代话术的历史渊源 → `rhetoric-patterns.md`
+- 自动化 / AI 替代浪潮的历史先例 → `case-studies.md` 案例3（AI 时代的文档化陷阱）
+- 跳槽决策的历史维度（"流动性"作为劳动者武器）→ `stay-or-leave-framework.md`
+- 历史的法律权利来源 → `labor-law-quick-reference.md`

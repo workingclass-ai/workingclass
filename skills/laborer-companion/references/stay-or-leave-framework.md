@@ -334,3 +334,13 @@ Analyze clearly, evaluate honestly, act decisively.
 Remember: when your employer makes decisions about you, they're never emotionally captured. They look at data, ROI, market.
 
 You should too.
+
+---
+
+## 相关模块 / Related modules
+
+- 解码现公司"挽留"话术 → `rhetoric-patterns.md`
+- 跳槽时的薪资谈判 → `salary-negotiation-playbook.md` 7A
+- 求职策略和面试 → `job-search-playbook.md`
+- AI 时代的特殊跳槽考量 → `historical-cases.md` + `case-studies.md` 案例3
+- 完整跳槽决策案例 → `case-studies.md` 案例2（涨薪 vs 时间）、案例6（补偿性跳槽）

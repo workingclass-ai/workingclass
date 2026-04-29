@@ -806,3 +806,14 @@ HR对你"非常热情"，反复说"你是最优秀的候选人"，但是：
 世界上没有完美的工作。但有适合你目前阶段的工作。
 
 找它需要清醒。这份文档希望能帮你保持那种清醒。
+
+---
+
+## 相关模块 / Related modules
+
+- 9A（启动求职）的前置：先做跳槽决策 → `stay-or-leave-framework.md`
+- 9C（面试反操控）→ 也参考 `rhetoric-patterns.md`（话术模式相通）
+- 9D（offer 谈判）→ `salary-negotiation-playbook.md` 7A
+- 9E（被拒/被裁恢复）→ 配合 `layoff-first-72-hours.md`
+- 实际案例 → `case-studies.md` 案例2（跳槽 + 谈判）、案例4（刚被裁求职）、案例6（多年低薪后跳槽）
+- 隐私保护（求职过程中和现公司的边界）→ `privacy-and-opsec.md`

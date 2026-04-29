@@ -7,3 +7,20 @@ node_modules/
 dist/
 build/
 *.log
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.venv/
+venv/
+
+# Editor
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Eval working files (leave templates committed)
+evals/RESULTS.20*.md

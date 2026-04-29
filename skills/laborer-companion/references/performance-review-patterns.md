@@ -282,3 +282,12 @@ The biggest harm of a performance review isn't unfair evaluation.
 It's making you believe the evaluation is fair, leading you to accept arrangements you shouldn't.
 
 Decoding it clearly is one of the most important things you can do for yourself.
+
+---
+
+## 相关模块 / Related modules
+
+- review 中的话术模式（特别是"模糊未来奖励"类）→ `rhetoric-patterns.md`
+- 评级下降 + 模糊期待 → `red-flag-scanner.md` + `pip-survival-playbook.md` 第一阶段
+- 想反向用 review 作为升职/加薪杠杆 → `salary-negotiation-playbook.md` 7B（在职加薪）
+- 实际案例 → `case-studies.md` 案例1（PIP 前夜的提前下车）、案例5（产假回来后的报复性 review）

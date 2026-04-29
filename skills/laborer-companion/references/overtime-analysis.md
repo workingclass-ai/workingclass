@@ -228,3 +228,12 @@ If user realizes they've accepted years of unfair overtime:
 This framework is not designed to make you refuse all overtime, or accept all overtime. It's designed to make every overtime decision a clear-eyed decision rather than rhetoric-driven.
 
 Clarity itself is a victory.
+
+---
+
+## 相关模块 / Related modules
+
+- 加班相关的话术解码（"team spirit"、"family"、"young people should hustle"）→ `rhetoric-patterns.md`
+- 法律层面（多数法域加班费有强制规定）→ `labor-law-quick-reference.md`
+- 长期接受不公正加班的累积效应 → `salary-negotiation-playbook.md` 7D（补偿性跳槽）
+- 如果加班是被裁前的"忙碌幻觉" → `red-flag-scanner.md`

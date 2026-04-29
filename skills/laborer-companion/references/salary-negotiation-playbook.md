@@ -796,3 +796,13 @@ HR："请问你目前的薪资是多少？"
 你为自己谈判，就是在为你的同事谈判，为你的下一代谈判。
 
 不要把这件事看小了。
+
+---
+
+## 相关模块 / Related modules
+
+- 7A（offer 谈判）实际案例 → `case-studies.md` 案例2
+- 7D（补偿性跳槽）实际案例 → `case-studies.md` 案例6
+- 谈 severance 是薪资谈判的特殊形式 → `pip-survival-playbook.md` 第三阶段C
+- 跳槽决策的前置 → `stay-or-leave-framework.md`
+- 谈判前的市场调研 → `job-search-playbook.md` 9A
