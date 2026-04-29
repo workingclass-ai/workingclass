@@ -1,7 +1,7 @@
 # 劳动者AI助手 / Laborer's Companion
 
-> 一个为劳动者服务的Claude Code skill。  
-> A Claude Code skill that serves workers.
+> 一个为劳动者服务的 agent skill。
+> An agent skill that serves workers.
 
 **版本 v3** - 9个完整模块覆盖职场全景
 
@@ -47,17 +47,21 @@ This tool's goal is to give you an assistant that can see through these tactics.
 
 ### 1. 安装 / Install
 
-把整个 `laborer-companion/` 目录放到你的 Claude Code skills 目录下：
+把整个 `laborer-companion/` 目录放到你的 agent skills 目录下：
 
 ```bash
-# 在 Claude Code 项目里
+# Codex
+mkdir -p "${CODEX_HOME:-$HOME/.codex}/skills"
+cp -R laborer-companion/ "${CODEX_HOME:-$HOME/.codex}/skills/"
+
+# Claude Code（如果你使用 legacy Claude skills）
 mkdir -p ~/.claude/skills
-cp -r laborer-companion/ ~/.claude/skills/
+cp -R laborer-companion/ ~/.claude/skills/
 ```
 
 ### 2. 触发使用 / Use it
 
-只要在Claude Code里描述你的职场情况，skill会自动激活：
+只要在 agent 里描述你的职场情况，skill会自动激活：
 
 ```
 帮我看看这封HR的邮件什么意思（粘贴邮件）
@@ -95,6 +99,8 @@ cp -r laborer-companion/ ~/.claude/skills/
 每个模块也有对应的 slash 命令：
 
 ```
+/triage      - 工具0a：分诊入口
+/scan        - 工具0b：红旗扫描
 /decode      - 模块1：话术解码
 /overtime    - 模块2：加班决策
 /review      - 模块3：绩效review解读
@@ -108,7 +114,7 @@ cp -r laborer-companion/ ~/.claude/skills/
 
 ### 4. 模块组合 / Module Combinations
 
-很多场景需要多个模块配合。**只需把你的情况告诉Claude，它会自动调用合适的模块组合。**
+很多场景需要多个模块配合。**只需把你的情况告诉 agent，它会自动调用合适的模块组合。**
 
 **场景：你怀疑要被裁了**
 - 模块3（解读最近review）+ 模块8（识别PIP预警）+ 模块6（了解法律权利）+ 模块7（如果谈severance）+ 模块9（秘密启动求职）
@@ -124,6 +130,8 @@ cp -r laborer-companion/ ~/.claude/skills/
 ```
 laborer-companion/
 ├── SKILL.md                              # Skill definition
+├── agents/
+│   └── openai.yaml                       # Codex UI metadata
 ├── README.md                             # This file
 ├── references/
 │   ├── rhetoric-patterns.md              # 模块1
@@ -134,8 +142,13 @@ laborer-companion/
 │   ├── labor-law-quick-reference.md      # 模块6
 │   ├── salary-negotiation-playbook.md    # 模块7
 │   ├── pip-survival-playbook.md          # 模块8
-│   └── job-search-playbook.md            # 模块9
+│   ├── job-search-playbook.md            # 模块9
+│   ├── red-flag-scanner.md               # 工具0b
+│   ├── layoff-first-72-hours.md          # 工具0c
+│   └── privacy-and-opsec.md              # 工具0d
 └── commands/
+    ├── triage.md
+    ├── scan.md
     ├── decode.md
     ├── overtime.md
     ├── review.md
@@ -152,7 +165,7 @@ laborer-companion/
 ⚠️ 重要：
 
 - 这个 skill 不会把你的对话内容上传到任何第三方服务器
-- 但是你和Claude的对话本身，会被Anthropic记录
+- 但是你和 AI 服务商的对话本身，可能会被平台记录，取决于账号和隐私设置
 - 如果你要分析非常敏感的工作内容（特别是公司机密、薪资细节），考虑使用本地模型或加密处理
 - 不要在公司设备上使用这个工具
 

@@ -21,6 +21,8 @@ references/labor-law-quick-reference.md
 
 This covers 8 major jurisdictions: Mainland China, Hong Kong/Taiwan, US (Federal + California/NY), Canada, Australia, UK, EU, India.
 
+Check the "Last reviewed" date at the top of the reference. If web or official-source lookup is available, verify current law before citing specific statutes or deadlines. If lookup is not available, say that the answer is based on the reference's review date and should be confirmed with an official source or local employment lawyer.
+
 ## Step 2: Identify the user's jurisdiction
 
 If unclear, ask:

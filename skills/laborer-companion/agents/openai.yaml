@@ -1,0 +1,4 @@
+interface:
+  display_name: "Laborer's Companion"
+  short_description: "Workplace clarity for worker decisions"
+  default_prompt: "Use $laborer-companion to analyze this workplace situation and give practical next steps."

@@ -18,7 +18,7 @@
 ```
 evals/
 ├── README.md             # 本文件
-├── cases/                # 12 个 eval cases
+├── cases/                # eval cases
 │   ├── 01-decode-family.md
 │   ├── 02-decode-mixed-signals.md
 │   ├── ...
@@ -33,31 +33,34 @@ evals/
 
 每个 `cases/NN-name.md` 文件本身就是一个 checklist。流程：
 
-1. 在 Claude Code 里安装本 skill（`cp -r skills/laborer-companion ~/.claude/skills/`）
+1. 在你的 agent 环境里安装本 skill（Codex: `cp -R skills/laborer-companion "${CODEX_HOME:-$HOME/.codex}/skills/"`）
 2. 打开一个新对话
-3. 把 case 里的 **input** 段落粘贴给 Claude
-4. 拿到 Claude 的回复
+3. 把 case 里的 **input** 段落粘贴给 agent
+4. 拿到 agent 的回复
 5. 对照 case 里的 **必须出现 / 必须不出现** 清单逐项打勾
 6. 在 `RESULTS.md` 里记录 pass / fail / partial + notes
 
-这是最可靠的方式——你直接看到 Claude 的实际行为。
+这是最可靠的方式——你直接看到 agent 的实际行为。
 
 ### 方式2：半自动 runner（更快但更模糊）
 
 ```bash
-# 需要 Python 3.11+ 和 claude CLI 已安装
+# 需要 Python 3.11+；auto 模式还需要支持 --print 的 headless CLI
 python evals/run_evals.py
 
 # 或只跑某几个
 python evals/run_evals.py --filter "decode|salary"
 
-# auto 模式：用 claude --print 跑 headless
+# auto 模式：默认用 claude --print 跑 headless
 python evals/run_evals.py --auto
+
+# 指定其他兼容 CLI
+python evals/run_evals.py --auto --llm-command "claude"
 ```
 
 `run_evals.py --auto` 会：
 1. 读每个 case 文件
-2. 用 `claude --print "<input>"` 调用 headless Claude
+2. 用 headless CLI 的 `--print "<input>"` 调用模型
 3. 对每个 "必须出现" 模式做字符串/正则检查
 4. 对每个 "必须不出现" 模式做字符串/正则检查
 5. 输出报告
@@ -86,7 +89,7 @@ input_lang: zh | en
 
 ## 输入 / Input
 
-[用户会发给 Claude 的原文。Chinese-first.]
+[用户会发给 agent 的原文。Chinese-first.]
 
 ## 必须出现 / Must appear
 
@@ -102,7 +105,7 @@ input_lang: zh | en
 
 ## Notes for reviewer
 
-[一些边界情况的说明，比如"如果 Claude 没识别到 Pattern N 但识别到了相似的，算 partial"]
+[一些边界情况的说明，比如"如果 agent 没识别到 Pattern N 但识别到了相似的，算 partial"]
 ```
 
 ## 优先级 / Priority

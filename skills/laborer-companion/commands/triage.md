@@ -1,5 +1,5 @@
 ---
-description: 入口分诊。当用户不知道自己该用哪个模块、或情况复杂涉及多个模块时使用。通过5个问题判断该走哪条路径。Entry triage — routes the user to the right module(s) when they're unsure or facing a complex situation.
+description: 入口分诊。当用户不知道自己该用哪个模块、或情况复杂涉及多个模块时使用。最多3个问题判断该走哪条路径。Entry triage — routes the user to the right module(s) when they're unsure or facing a complex situation.
 allowed-tools: Read
 ---
 

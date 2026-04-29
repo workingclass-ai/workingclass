@@ -6,7 +6,7 @@
 
 - 日期 / Date: YYYY-MM-DD
 - skill 版本 / version: vX.X.X (commit SHA: xxxxxxx)
-- 模型 / Model: Claude Opus 4.X / Sonnet 4.X
+- 模型 / Model: model/provider name
 - 跑法 / Mode: 手动 / auto / mixed
 - 跑了几个 / Cases run: NN / NN
 
