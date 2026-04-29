@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: 💬 讨论 / Discussions
+    url: https://github.com/workingclass-ai/workingclass/discussions
+    about: 不确定要不要开 issue？先来 Discussions 聊聊。Not sure if it's an issue? Discuss first.
+  - name: ⚠️ 隐私警告 / Privacy Warning
+    url: https://github.com/workingclass-ai/workingclass/blob/main/skills/laborer-companion/references/privacy-and-opsec.md
+    about: 在贴任何工作相关内容前先读这个 / Read before posting work-related content
