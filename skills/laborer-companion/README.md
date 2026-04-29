@@ -38,7 +38,7 @@ This tool's goal is to give you an assistant that can see through these tactics.
 | 3. 绩效review清醒解读 | 看穿review背后的真实意图 | `references/performance-review-patterns.md` |
 | 4. 跳槽留任决策框架 | 基于真实利益做出选择 | `references/stay-or-leave-framework.md` |
 | 5. 历史视角咨询 | 从过去150年工人运动史中找到类似案例 | `references/historical-cases.md` |
-| 6. 劳动法快速查询 | 8个法域的劳动法地图 | `references/labor-law-quick-reference.md` |
+| 6. 劳动法快速查询 | 8个法域的劳动法地图 + 单独法域文件 | `references/labor-law-quick-reference.md` |
 | 7. 薪资谈判脚本 | 完整谈判playbook | `references/salary-negotiation-playbook.md` |
 | 8. PIP应对剧本 | 从识别预警到谈severance的全流程 | `references/pip-survival-playbook.md` |
 | 9. 找工作和面试 | 求职全生命周期：识别陷阱、面试反操控、offer决策 | `references/job-search-playbook.md` |
@@ -139,7 +139,15 @@ laborer-companion/
 │   ├── performance-review-patterns.md    # 模块3
 │   ├── stay-or-leave-framework.md        # 模块4
 │   ├── historical-cases.md               # 模块5
-│   ├── labor-law-quick-reference.md      # 模块6
+│   ├── labor-law-quick-reference.md      # 模块6：法域导航
+│   ├── labor-law-china-mainland.md
+│   ├── labor-law-hong-kong-taiwan.md
+│   ├── labor-law-united-states.md
+│   ├── labor-law-canada.md
+│   ├── labor-law-australia.md
+│   ├── labor-law-united-kingdom.md
+│   ├── labor-law-european-union.md
+│   ├── labor-law-india.md
 │   ├── salary-negotiation-playbook.md    # 模块7
 │   ├── pip-survival-playbook.md          # 模块8
 │   ├── job-search-playbook.md            # 模块9

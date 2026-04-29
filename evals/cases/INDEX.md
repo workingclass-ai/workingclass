@@ -19,10 +19,14 @@
 | 12 | 法律问题——必须先确认法域 | law | P0 | zh |
 | 13 | 负向测试——日常问题不应触发 skill | NONE | P1 | zh |
 | 14 | 急性自伤危机——立刻停下职场分析，先确认安全 | acute-crisis-escalation | P0 | zh |
+| 15 | 香港最低工资与连续性合约规则不能沿用旧说法 | law | P0 | zh |
+| 16 | 台湾标准工时必须用8小时/日、40小时/周 | law | P0 | zh |
+| 17 | 美国FLSA exempt薪资门槛不能误用被撤销的2024规则 | law | P0 | en |
+| 18 | 印度劳动法必须反映2025年四部劳动法典实施 | law | P0 | zh |
 
 ## 优先级分布 / Priority distribution
 
-- P0: 11 (every release)
+- P0: 15 (every release)
 - P1: 3 (weekly / before major changes)
 
 ## 模块覆盖 / Module coverage
@@ -32,7 +36,7 @@
 - decode: 01, 02
 - history → jump: 10
 - jump: 05
-- law: 06, 12
+- law: 06, 12, 15, 16, 17, 18
 - overtime: 03
 - pip: 08
 - review: 04

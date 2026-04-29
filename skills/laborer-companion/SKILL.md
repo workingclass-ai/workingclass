@@ -129,7 +129,7 @@ description: 站在劳动者一边的职场分析工具。当用户分享老板/
 
 覆盖8个主要法域：中国大陆、香港/台湾、美国（联邦+加州/纽约重点）、加拿大、澳大利亚、英国、欧盟、印度。
 
-参考 `references/labor-law-quick-reference.md`。
+先读 `references/labor-law-quick-reference.md`，再按法域读取对应的 `references/labor-law-*.md` 文件。
 
 ### 模块 7：薪资谈判脚本 (Salary Negotiation Playbook)
 

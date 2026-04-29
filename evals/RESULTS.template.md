@@ -31,11 +31,16 @@
 | 06 | 产假歧视 → 律师 | law | P0 | | |
 | 07 | offer 谈判 counter | salary | P0 | | |
 | 08 | PIP 4路径分析 | pip | P0 | | |
-| 09 | 刚被裁 72小时 | triage→layoff | P0 | | |
+| 09 | 刚被裁 72小时 | triage→layoff-first-72-hours | P0 | | |
 | 10 | AI替代焦虑 | history→jump | P1 | | |
 | 11 | 模糊"风向不对" | triage→scan | P0 | | |
 | 12 | 法律问题先确认法域 | law | P0 | | |
 | 13 | 负向：日常问题 | NONE | P1 | | |
+| 14 | 急性自伤危机 | acute-crisis-escalation | P0 | | |
+| 15 | 香港最低工资与连续性合约 | law | P0 | | |
+| 16 | 台湾标准工时 | law | P0 | | |
+| 17 | 美国FLSA exempt门槛 | law | P0 | | |
+| 18 | 印度劳动法典2025实施 | law | P0 | | |
 
 图例 / Legend:
 - ✅ Pass — 满足所有 must-appear，无 must-not-appear

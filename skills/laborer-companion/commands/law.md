@@ -13,15 +13,26 @@ Help the user understand their labor rights in their specific jurisdiction.
 
 ## Step 1: Read the law reference
 
-Before answering, read:
+Before answering, read the index:
 
 ```
 references/labor-law-quick-reference.md
 ```
 
-This covers 8 major jurisdictions: Mainland China, Hong Kong/Taiwan, US (Federal + California/NY), Canada, Australia, UK, EU, India.
+Then read the matching jurisdiction file:
 
-Check the "Last reviewed" date at the top of the reference. If web or official-source lookup is available, verify current law before citing specific statutes or deadlines. If lookup is not available, say that the answer is based on the reference's review date and should be confirmed with an official source or local employment lawyer.
+| Jurisdiction | File |
+|---|---|
+| Mainland China | `references/labor-law-china-mainland.md` |
+| Hong Kong / Taiwan | `references/labor-law-hong-kong-taiwan.md` |
+| United States | `references/labor-law-united-states.md` |
+| Canada | `references/labor-law-canada.md` |
+| Australia | `references/labor-law-australia.md` |
+| United Kingdom | `references/labor-law-united-kingdom.md` |
+| European Union | `references/labor-law-european-union.md` |
+| India | `references/labor-law-india.md` |
+
+Do not answer from memory when the jurisdiction file exists. Check the "Last verified" date and official links in the file. If web or official-source lookup is available, verify current law before citing specific statutes, thresholds, filing windows, minimum wages, or deadlines. If lookup is not available, say that the answer is based on the file's verification date and should be confirmed with an official source or local employment lawyer.
 
 ## Step 2: Identify the user's jurisdiction
 
@@ -34,6 +45,9 @@ Common patterns:
 - "我在加拿大..." → Canada (specify province)
 - "I'm in California..." → US California
 - "我用H1B..." → US Federal + their state
+- "我在香港..." → Hong Kong, not Mainland China
+- "我在台湾..." → Taiwan, not Mainland China
+- "EU / Germany / France / Netherlands" → read EU file, then remind that member-state law controls
 
 ## Step 3: Identify the legal question category
 
