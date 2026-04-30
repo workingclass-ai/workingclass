@@ -28,3 +28,7 @@ htmlcov/
 
 # Eval working files (leave templates committed)
 evals/RESULTS.20*.md
+
+# Eval recordings — local runs aren't committed by default. Rename to BASELINE-*.json
+# or another name not matching this pattern to commit a recording you care about.
+evals/runs/RESULTS-*.json

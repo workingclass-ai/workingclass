@@ -1,0 +1,92 @@
+name: Eval Record (manual)
+
+# Runs the eval suite against a real LLM and uploads the recording as an artifact.
+# This workflow is intentionally NOT triggered on push or PR — real LLM calls
+# cost money and take minutes. Trigger it from the Actions UI when you want
+# to capture a snapshot, or after a model upgrade.
+
+on:
+  workflow_dispatch:
+    inputs:
+      llm_command:
+        description: "LLM CLI to invoke (e.g. 'claude', 'gpt'). Must be installed on the runner."
+        required: true
+        default: "claude"
+      tag:
+        description: "Recording tag (used in filename, e.g. 'claude-opus-4-7')"
+        required: true
+        default: "claude"
+      filter:
+        description: "Optional regex to filter cases (e.g. 'pip', '0[1-5]')"
+        required: false
+        default: ""
+
+permissions:
+  contents: read
+
+jobs:
+  record:
+    name: Record evals against ${{ inputs.tag }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+
+      # NOTE: Installing the actual LLM CLI is left to the workflow caller.
+      # If you use a CLI that ships as an npm/pip/binary, add the install step
+      # here. Most teams will branch on `${{ inputs.tag }}` to pick the right
+      # install. Anthropic / OpenAI keys must be available as repo secrets and
+      # exposed to the runner via env: below.
+
+      - name: Run eval recording
+        env:
+          # Provide whatever env your LLM CLI needs. These names are illustrative.
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          set -euo pipefail
+          DATE=$(date -u +%Y-%m-%d)
+          OUT="evals/runs/RESULTS-${DATE}-${{ inputs.tag }}.json"
+          mkdir -p evals/runs
+          if [ -n "${{ inputs.filter }}" ]; then
+            python evals/run_evals.py --auto \
+              --llm-command "${{ inputs.llm_command }}" \
+              --filter "${{ inputs.filter }}" \
+              --record "$OUT"
+          else
+            python evals/run_evals.py --auto \
+              --llm-command "${{ inputs.llm_command }}" \
+              --record "$OUT"
+          fi
+          echo "RESULTS_PATH=$OUT" >> "$GITHUB_ENV"
+
+      - name: Diff against committed baseline (if any)
+        if: success()
+        run: |
+          if compgen -G "evals/runs/BASELINE-${{ inputs.tag }}.json" > /dev/null; then
+            python evals/eval_diff.py \
+              "evals/runs/BASELINE-${{ inputs.tag }}.json" \
+              "$RESULTS_PATH" \
+              || echo "::warning::Regressions detected vs baseline; review the artifact."
+          else
+            echo "No committed baseline for tag '${{ inputs.tag }}' — skipping diff."
+          fi
+
+      - name: Upload recording
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: results-${{ inputs.tag }}-${{ github.run_number }}
+          path: ${{ env.RESULTS_PATH }}
+          retention-days: 90

@@ -5,7 +5,7 @@
 PY ?= python
 PYTEST ?= pytest
 
-.PHONY: help install test test-unit test-e2e validate validate-strict index check-translations all clean
+.PHONY: help install test test-unit test-e2e validate validate-strict index check-translations eval-record eval-diff eval-baseline all clean
 
 help: ## Show this message
 	@awk 'BEGIN {FS = ":.*##"; printf "Targets:\n"} /^[a-zA-Z_-]+:.*##/ {printf "  \033[36m%-22s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -32,6 +32,28 @@ index: ## Rebuild evals/cases/INDEX.md
 
 check-translations: ## Flag README translations that lag behind README.md
 	$(PY) tools/check_translation_staleness.py
+
+eval-record: ## Run evals against $$LLM (default: claude) and write evals/runs/RESULTS-<date>-<model>.json. Costs API tokens.
+	@if [ -z "$(LLM)" ]; then LLM=claude; fi; \
+	DATE=$$(date -u +%Y-%m-%d); \
+	TAG=$${TAG:-$$LLM}; \
+	OUT=evals/runs/RESULTS-$$DATE-$$TAG.json; \
+	echo "Recording to $$OUT (LLM=$$LLM). Press Ctrl-C to abort."; \
+	sleep 2; \
+	$(PY) evals/run_evals.py --auto --llm-command "$$LLM" --record "$$OUT"
+
+eval-baseline: ## Regenerate evals/runs/BASELINE-stub.json from the stub LLM (no API needed)
+	$(PY) evals/run_evals.py --auto --llm-command tests/fixtures/stub_llm_pass.sh --record evals/runs/BASELINE-stub.json
+
+eval-diff: ## Diff two recordings: make eval-diff BASELINE=path/to/a.json CURRENT=path/to/b.json
+	@if [ -z "$(BASELINE)" ] || [ -z "$(CURRENT)" ]; then \
+		echo "usage: make eval-diff BASELINE=<path> CURRENT=<path> [SHOW=1]"; exit 2; \
+	fi; \
+	if [ "$(SHOW)" = "1" ]; then \
+		$(PY) evals/eval_diff.py "$(BASELINE)" "$(CURRENT)" --show-output; \
+	else \
+		$(PY) evals/eval_diff.py "$(BASELINE)" "$(CURRENT)"; \
+	fi
 
 all: validate-strict test index ## Everything CI runs
 	@echo "✓ all green"

@@ -7,26 +7,41 @@
     python evals/run_evals.py --auto             # 用 headless CLI --print 跑
     python evals/run_evals.py --auto --filter pip
     python evals/run_evals.py --auto --llm-command "claude"
+    python evals/run_evals.py --auto --record evals/runs/RESULTS-2026-04-30.json
 
 手动模式：会逐个打印 case 的 input + 检查清单，等你在另一个 agent 会话里运行后回 pass/fail。
 auto 模式：调用本地 headless CLI 跑 `--print`，并对输出做字面 pattern 匹配（仅检查 must-appear / must-not-appear 的简单包含，不能判断"输出好不好"）。
+record 模式：在 auto 模式基础上把每个 case 的完整输出 + 元数据写到 JSON，方便跨模型版本对比（见 evals/eval_diff.py）。
 """
 
 from __future__ import annotations
 
 import argparse
+import json
 import os
 import re
 import shlex
 import shutil
 import subprocess
 import sys
-from dataclasses import dataclass, field
+import time
+from dataclasses import asdict, dataclass, field
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
 
 EVAL_DIR = Path(__file__).parent
 CASES_DIR = EVAL_DIR / "cases"
+REPO_ROOT = EVAL_DIR.parent
+SKILL_FILE = REPO_ROOT / "skills" / "laborer-companion" / "SKILL.md"
+
+# Bump this when the recording schema changes in a backwards-incompatible way.
+# eval_diff.py refuses to compare across schema versions.
+RECORDING_SCHEMA_VERSION = 1
+
+# Cap raw output captured per case to avoid bloating recordings if the model
+# rambles. 64 KB is enough for any reasonable workplace-analysis answer.
+MAX_OUTPUT_BYTES = 64 * 1024
 
 
 @dataclass
@@ -41,6 +56,53 @@ class EvalCase:
     must_appear: list[str] = field(default_factory=list)
     must_not_appear: list[str] = field(default_factory=list)
     notes: str = ""
+
+
+# Verdict vocabulary used in recordings + summaries.
+# Single-letter form is preserved for the legacy interactive prompt.
+STATUS_PASS = "pass"
+STATUS_FAIL = "fail"
+STATUS_PARTIAL = "partial"
+STATUS_SKIP = "skip"
+STATUS_ERROR = "error"
+
+_STATUS_TO_LETTER = {
+    STATUS_PASS: "p",
+    STATUS_FAIL: "f",
+    STATUS_PARTIAL: "x",
+    STATUS_SKIP: "s",
+    STATUS_ERROR: "f",
+}
+_LETTER_TO_STATUS = {
+    "p": STATUS_PASS,
+    "f": STATUS_FAIL,
+    "x": STATUS_PARTIAL,
+    "s": STATUS_SKIP,
+}
+
+
+@dataclass
+class RunResult:
+    """A single eval case's outcome, rich enough to record + diff."""
+
+    case_id: str
+    title: str
+    module_expected: str
+    priority: str
+    input_lang: str
+    status: str  # pass | fail | partial | skip | error
+    note: str = ""
+    stdout: str = ""
+    stderr: str = ""
+    duration_ms: int = 0
+    exit_code: Optional[int] = None
+    missing_keywords: list[str] = field(default_factory=list)
+    forbidden_hits: list[str] = field(default_factory=list)
+    prompt: str = ""
+
+    @property
+    def status_letter(self) -> str:
+        return _STATUS_TO_LETTER.get(self.status, "f")
 
 
 def parse_case(path: Path) -> EvalCase:
@@ -118,9 +180,9 @@ def load_cases(filter_pattern: Optional[str] = None) -> list[EvalCase]:
     return cases
 
 
-def run_manual(cases: list[EvalCase]) -> None:
-    """逐个打印 case，等用户标记 pass/fail/partial。"""
-    results: list[tuple[EvalCase, str, str]] = []  # (case, status, notes)
+def run_manual(cases: list[EvalCase]) -> list[RunResult]:
+    """逐个打印 case，等用户标记 pass/fail/partial。Returns RunResult per case."""
+    results: list[RunResult] = []
 
     print(f"\n=== 手动 eval 模式 / Manual mode ===\n")
     print(f"将运行 {len(cases)} 个 case。每个 case：")
@@ -150,19 +212,31 @@ def run_manual(cases: list[EvalCase]) -> None:
             ans = input("\n结果 / Result [p/f/x/s] + optional notes: ").strip()
             if not ans:
                 continue
-            status = ans[0].lower()
-            if status not in {"p", "f", "x", "s"}:
+            letter = ans[0].lower()
+            if letter not in _LETTER_TO_STATUS:
                 print("无效输入。p=pass / f=fail / x=partial / s=skip")
                 continue
             notes = ans[1:].strip() if len(ans) > 1 else ""
-            results.append((c, status, notes))
+            results.append(
+                RunResult(
+                    case_id=c.id,
+                    title=c.title,
+                    module_expected=c.module_expected,
+                    priority=c.priority,
+                    input_lang=c.input_lang,
+                    status=_LETTER_TO_STATUS[letter],
+                    note=notes,
+                    prompt=c.input_text,
+                )
+            )
             break
 
     _summary(results)
+    return results
 
 
-def run_auto(cases: list[EvalCase], llm_command: str) -> None:
-    """用 headless CLI 跑 cases，做字面 pattern 检查。"""
+def run_auto(cases: list[EvalCase], llm_command: str) -> list[RunResult]:
+    """用 headless CLI 跑 cases，做字面 pattern 检查。Returns RunResult per case."""
     command = shlex.split(llm_command)
     if not command:
         print("ERROR: --llm-command cannot be empty.", file=sys.stderr)
@@ -176,7 +250,7 @@ def run_auto(cases: list[EvalCase], llm_command: str) -> None:
         )
         sys.exit(1)
 
-    results: list[tuple[EvalCase, str, str]] = []
+    results: list[RunResult] = []
 
     print(f"\n=== Auto eval 模式 / Auto mode ===\n")
     print(f"用 `{' '.join(command)} --print` headless 跑 {len(cases)} 个 case。")
@@ -185,48 +259,90 @@ def run_auto(cases: list[EvalCase], llm_command: str) -> None:
 
     for i, c in enumerate(cases, 1):
         print(f"[{i}/{len(cases)}] {c.id} — {c.title} ... ", end="", flush=True)
-        try:
-            proc = subprocess.run(
-                [*command, "--print", c.input_text],
-                capture_output=True,
-                text=True,
-                timeout=180,
-            )
-            if proc.returncode != 0:
-                stderr = proc.stderr.strip().splitlines()
-                detail = stderr[-1] if stderr else f"exit code {proc.returncode}"
-                print(f"ERROR ({detail})")
-                results.append((c, "f", f"runner failed: {detail}"))
-                continue
-            output = proc.stdout.lower()
-        except subprocess.TimeoutExpired:
-            print("TIMEOUT")
-            results.append((c, "f", "timeout"))
-            continue
-        except Exception as e:
-            print(f"ERROR: {e}")
-            results.append((c, "f", f"runner error: {e}"))
-            continue
-
-        appear_misses = _check_keywords(output, c.must_appear, present=True)
-        not_appear_hits = _check_keywords(output, c.must_not_appear, present=False)
-
-        if not appear_misses and not not_appear_hits:
-            status = "p"
-            note = ""
-            print("PASS")
-        elif appear_misses and not not_appear_hits:
-            status = "x"
-            note = f"missed: {appear_misses[:2]}"
-            print(f"PARTIAL ({len(appear_misses)} expected patterns missing)")
-        else:
-            status = "f"
-            note = f"forbidden: {not_appear_hits[:2]}"
-            print(f"FAIL (forbidden patterns appeared: {len(not_appear_hits)})")
-
-        results.append((c, status, note))
+        results.append(_run_one_case(command, c))
+        print(_format_outcome_tail(results[-1]))
 
     _summary(results)
+    return results
+
+
+def _run_one_case(command: list[str], c: EvalCase) -> RunResult:
+    """Drive a single case through the LLM CLI and classify the verdict."""
+    base = RunResult(
+        case_id=c.id,
+        title=c.title,
+        module_expected=c.module_expected,
+        priority=c.priority,
+        input_lang=c.input_lang,
+        status=STATUS_FAIL,
+        prompt=c.input_text,
+    )
+
+    started = time.monotonic()
+    try:
+        proc = subprocess.run(
+            [*command, "--print", c.input_text],
+            capture_output=True,
+            text=True,
+            timeout=180,
+        )
+    except subprocess.TimeoutExpired:
+        base.status = STATUS_ERROR
+        base.note = "timeout"
+        base.duration_ms = int((time.monotonic() - started) * 1000)
+        return base
+    except Exception as e:
+        base.status = STATUS_ERROR
+        base.note = f"runner error: {e}"
+        base.duration_ms = int((time.monotonic() - started) * 1000)
+        return base
+
+    base.duration_ms = int((time.monotonic() - started) * 1000)
+    base.exit_code = proc.returncode
+    base.stdout = _truncate(proc.stdout, MAX_OUTPUT_BYTES)
+    base.stderr = _truncate(proc.stderr, MAX_OUTPUT_BYTES)
+
+    if proc.returncode != 0:
+        stderr_lines = proc.stderr.strip().splitlines()
+        detail = stderr_lines[-1] if stderr_lines else f"exit code {proc.returncode}"
+        base.status = STATUS_ERROR
+        base.note = f"runner failed: {detail}"
+        return base
+
+    output_lower = proc.stdout.lower()
+    base.missing_keywords = _check_keywords(output_lower, c.must_appear, present=True)
+    base.forbidden_hits = _check_keywords(output_lower, c.must_not_appear, present=False)
+
+    if not base.missing_keywords and not base.forbidden_hits:
+        base.status = STATUS_PASS
+    elif base.missing_keywords and not base.forbidden_hits:
+        base.status = STATUS_PARTIAL
+        base.note = f"missed: {base.missing_keywords[:2]}"
+    else:
+        base.status = STATUS_FAIL
+        base.note = f"forbidden: {base.forbidden_hits[:2]}"
+    return base
+
+
+def _truncate(text: str, max_bytes: int) -> str:
+    """Cap text at max_bytes, with a marker if truncated."""
+    encoded = text.encode("utf-8")
+    if len(encoded) <= max_bytes:
+        return text
+    truncated = encoded[:max_bytes].decode("utf-8", errors="ignore")
+    return truncated + f"\n…[truncated, original {len(encoded)} bytes]"
+
+
+def _format_outcome_tail(r: RunResult) -> str:
+    if r.status == STATUS_PASS:
+        return "PASS"
+    if r.status == STATUS_PARTIAL:
+        return f"PARTIAL ({len(r.missing_keywords)} expected patterns missing)"
+    if r.status == STATUS_ERROR:
+        if "timeout" in r.note:
+            return "TIMEOUT"
+        return f"ERROR ({r.note})"
+    return f"FAIL (forbidden patterns appeared: {len(r.forbidden_hits)})"
 
 
 def _check_keywords(output: str, expectations: list[str], present: bool) -> list[str]:
@@ -330,41 +446,108 @@ def _is_useful_candidate(value: str, allow_short: bool = False) -> bool:
     return True
 
 
-def _summary(results: list[tuple[EvalCase, str, str]]) -> None:
+def _summary(results: list[RunResult]) -> None:
     print(f"\n\n{'=' * 70}")
     print(f"=== 结果总结 / Summary ===")
     print(f"{'=' * 70}\n")
 
-    counts = {"p": 0, "f": 0, "x": 0, "s": 0}
-    p0_fails = []
-    for c, status, _ in results:
-        counts[status] += 1
-        if status == "f" and c.priority == "P0":
-            p0_fails.append(c)
+    counts = {STATUS_PASS: 0, STATUS_FAIL: 0, STATUS_PARTIAL: 0, STATUS_SKIP: 0, STATUS_ERROR: 0}
+    p0_fails: list[RunResult] = []
+    for r in results:
+        # Errors are surfaced as fails in the headline counts (kept separate field for diff tools)
+        bucket = r.status if r.status in counts else STATUS_FAIL
+        counts[bucket] += 1
+        if r.status in {STATUS_FAIL, STATUS_ERROR} and r.priority == "P0":
+            p0_fails.append(r)
 
     total = len(results)
-    print(f"Pass:    {counts['p']:3d} / {total}")
-    print(f"Fail:    {counts['f']:3d} / {total}")
-    print(f"Partial: {counts['x']:3d} / {total}")
-    print(f"Skip:    {counts['s']:3d} / {total}")
+    fail_total = counts[STATUS_FAIL] + counts[STATUS_ERROR]
+    print(f"Pass:    {counts[STATUS_PASS]:3d} / {total}")
+    print(f"Fail:    {fail_total:3d} / {total}")
+    print(f"Partial: {counts[STATUS_PARTIAL]:3d} / {total}")
+    print(f"Skip:    {counts[STATUS_SKIP]:3d} / {total}")
 
     if p0_fails:
         print(f"\n⚠️  {len(p0_fails)} 个 P0 case 失败 — 不要发版！")
-        for c in p0_fails:
-            print(f"   - {c.id}: {c.title}")
+        for r in p0_fails:
+            print(f"   - {r.case_id}: {r.title}")
 
     print()
-    fail_or_partial = [(c, s, n) for c, s, n in results if s in {"f", "x"}]
-    if fail_or_partial:
+    troubled = [r for r in results if r.status in {STATUS_FAIL, STATUS_PARTIAL, STATUS_ERROR}]
+    if troubled:
         print("详细 / Details:")
-        for c, status, note in fail_or_partial:
-            mark = {"f": "✗", "x": "△"}[status]
-            print(f"  {mark} {c.id} — {c.title}")
-            if note:
-                print(f"     {note}")
+        marks = {STATUS_FAIL: "✗", STATUS_PARTIAL: "△", STATUS_ERROR: "✗"}
+        for r in troubled:
+            print(f"  {marks.get(r.status, '?')} {r.case_id} — {r.title}")
+            if r.note:
+                print(f"     {r.note}")
 
 
-def main() -> None:
+def _read_skill_version(skill_file: Path = SKILL_FILE) -> Optional[str]:
+    if not skill_file.exists():
+        return None
+    text = skill_file.read_text(encoding="utf-8")
+    match = re.match(r"^---\s*\n(.*?)\n---\s*(?:\n|$)", text, re.DOTALL)
+    if not match:
+        return None
+    for line in match.group(1).splitlines():
+        if ":" in line:
+            k, v = line.split(":", 1)
+            if k.strip() == "version":
+                return v.strip().strip('"').strip("'")
+    return None
+
+
+def _read_git_commit(repo_root: Path = REPO_ROOT) -> Optional[str]:
+    try:
+        out = subprocess.run(
+            ["git", "-C", str(repo_root), "rev-parse", "--short", "HEAD"],
+            check=True,
+            capture_output=True,
+            text=True,
+            timeout=5,
+        )
+    except (subprocess.CalledProcessError, FileNotFoundError, subprocess.TimeoutExpired):
+        return None
+    return out.stdout.strip() or None
+
+
+def write_recording(
+    results: list[RunResult],
+    path: Path,
+    *,
+    llm_command: str,
+    started_at: datetime,
+    ended_at: datetime,
+    extra_meta: Optional[dict] = None,
+) -> Path:
+    """Write a recording JSON. Schema documented at evals/runs/README.md."""
+    recording = {
+        "schema_version": RECORDING_SCHEMA_VERSION,
+        "meta": {
+            "started_at": started_at.isoformat(timespec="seconds"),
+            "ended_at": ended_at.isoformat(timespec="seconds"),
+            "llm_command": llm_command,
+            "skill_version": _read_skill_version(),
+            "skill_commit": _read_git_commit(),
+            "case_count": len(results),
+            **(extra_meta or {}),
+        },
+        "results": [_result_to_dict(r) for r in results],
+    }
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(recording, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    return path
+
+
+def _result_to_dict(r: RunResult) -> dict:
+    """Stable JSON shape for recordings — keep keys snake_case + lower-case for diff stability."""
+    d = asdict(r)
+    # Drop derived/internal fields that aren't part of the recording schema
+    return {k: v for k, v in d.items() if not k.startswith("_")}
+
+
+def main() -> int:
     ap = argparse.ArgumentParser(description="laborer-companion eval runner")
     ap.add_argument("--filter", help="regex on filename to filter cases")
     ap.add_argument("--auto", action="store_true", help="use a headless LLM CLI in --print mode")
@@ -373,7 +556,26 @@ def main() -> None:
         default=os.environ.get("EVAL_LLM_COMMAND", "claude"),
         help="headless LLM command to run before --print (default: env EVAL_LLM_COMMAND or claude)",
     )
+    ap.add_argument(
+        "--record",
+        metavar="PATH",
+        help=(
+            "write a recording JSON for cross-model comparison. "
+            "Implies --auto. Path must end in .json. "
+            "Example: --record evals/runs/RESULTS-2026-04-30-claude-4-7.json"
+        ),
+    )
     args = ap.parse_args()
+
+    if args.record and not args.auto:
+        # Convenience: --record implies --auto since manual mode has no captured output
+        args.auto = True
+
+    if args.record:
+        record_path = Path(args.record)
+        if record_path.suffix != ".json":
+            print("ERROR: --record path must end in .json", file=sys.stderr)
+            return 2
 
     if not args.auto and not sys.stdin.isatty():
         print(
@@ -381,19 +583,32 @@ def main() -> None:
             "Run with --auto or execute this script in a real terminal.",
             file=sys.stderr,
         )
-        sys.exit(2)
+        return 2
 
     cases = load_cases(args.filter)
     if not cases:
         print("没有找到 case 文件。No case files found.", file=sys.stderr)
-        sys.exit(1)
+        return 1
 
     print(f"Loaded {len(cases)} case(s).")
+    started_at = datetime.now(timezone.utc)
     if args.auto:
-        run_auto(cases, args.llm_command)
+        results = run_auto(cases, args.llm_command)
     else:
-        run_manual(cases)
+        results = run_manual(cases)
+    ended_at = datetime.now(timezone.utc)
+
+    if args.record:
+        path = write_recording(
+            results,
+            Path(args.record),
+            llm_command=args.llm_command,
+            started_at=started_at,
+            ended_at=ended_at,
+        )
+        print(f"\nRecorded {len(results)} result(s) to {path}")
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

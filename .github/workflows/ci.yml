@@ -73,6 +73,20 @@ jobs:
         # and follow up with translations in a separate PR within a week.
         run: python tools/check_translation_staleness.py --max-age-days 7
 
+      - name: Verify recording pipeline against stub baseline
+        # Re-runs evals against the deterministic stub LLM and diffs against the
+        # committed BASELINE-stub.json. This catches regressions in the runner /
+        # schema / diff tool — NOT in skill content quality (which the stub
+        # cannot judge). Real-LLM evals run separately via eval-record.yml.
+        run: |
+          chmod +x tests/fixtures/*.sh
+          python evals/run_evals.py --auto \
+            --llm-command tests/fixtures/stub_llm_pass.sh \
+            --record /tmp/stub-fresh.json
+          python evals/eval_diff.py \
+            evals/runs/BASELINE-stub.json /tmp/stub-fresh.json \
+            --quiet
+
   e2e:
     name: End-to-end (stub LLM)
     runs-on: ubuntu-latest

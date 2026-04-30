@@ -89,25 +89,40 @@ skill 当前在七种语言里有完整支持：简体中文、繁體中文、En
 
 ## 本地测试 / Running tests
 
+最快的入口是 `make help` —— 列出全部 target。常用：
+
 ```bash
-# 装依赖（任选一个）
-uv sync                            # uv 用户
-pip install -e ".[dev]"            # pip 用户
-
-# 单元测试 + 结构校验
-pytest -m "not e2e"
-
-# 端到端测试（用 stub LLM，不依赖任何 API key）
-pytest -m e2e
-
-# 校验 skill / cases 结构（CI 也会跑这个）
-python evals/validate_structure.py --strict
-
-# 加完 case 后重建索引
-python evals/build_index.py
+make install            # pip install -e ".[dev]"
+make test               # 单元 + 结构 + e2e
+make test-unit          # 仅快速测试
+make validate-strict    # skill / cases / 翻译结构校验
+make index              # 重建 evals/cases/INDEX.md
+make check-translations # 检查翻译是否落后于 README.md
+make all                # CI 跑的全部检查
 ```
 
 CI（`.github/workflows/ci.yml`）会在 push / PR 上自动跑这些检查。
+
+## 跨模型 / 跨版本对比 / Recording-based comparison
+
+跑一次真 LLM 测试很贵（30 cases × ~30s × $$ tokens），不要每次 PR 都跑。
+推荐节奏：模型升级 / skill 大改后做一次 record，commit 到 `evals/runs/`。
+
+```bash
+# 跑全部 case 并写 RESULTS-<date>-<tag>.json
+make eval-record LLM=claude TAG=claude-opus-4-7
+
+# 对比两次 record（默认只比 verdict 层）
+make eval-diff BASELINE=evals/runs/RESULTS-2026-04-30-claude-opus-4-7.json \
+               CURRENT=evals/runs/RESULTS-2026-05-15-claude-opus-4-8.json
+
+# 加 SHOW=1 看每个 verdict 翻转 case 的 stdout 文本 diff
+make eval-diff BASELINE=... CURRENT=... SHOW=1
+
+# 也可以从 GitHub UI 触发：Actions → "Eval Record (manual)" → workflow_dispatch
+```
+
+Recording schema 见 [`evals/runs/README.md`](evals/runs/README.md)。`BASELINE-stub.json` 是用 stub LLM 生成的 pipeline baseline（不是质量 baseline），CI 会跑它来检测 runner / schema 回归。
 
 ## 工作流
 
