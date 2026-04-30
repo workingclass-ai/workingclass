@@ -18,6 +18,34 @@ The AI era makes this asymmetry worse — companies use AI to distill your work,
 
 ---
 
+## Quick start — see it in action
+
+Your manager just sent you this:
+
+> *"Hey, I really appreciate your dedication. The team's vision for next year requires more cross-functional ownership and strategic impact — I'd love to see you stretch into broader leadership. That's the trajectory I see for you. Let's chat at our next 1:1."*
+
+Run `/decode` (or paste it into any agent that has the skill installed) and you get:
+
+```
+Pattern: vague-future-reward + scope-creep without compensation
+
+What's actually being said:
+  - "broader leadership" / "strategic impact" / "trajectory" — unmeasurable
+    expectations the manager can re-define at any time
+  - No promotion timeline, no comp delta, no scope reduction elsewhere
+  - "That's the trajectory I see" ≠ "we are committing to a promotion"
+
+Your move (this week):
+  1. Reply asking for the *promotion criteria* in writing — specific, measurable
+  2. Ask which existing scope you can drop while taking on the new one
+  3. Ask the comp delta if you hit those criteria
+  4. Save the manager's response (or the silence) — it's evidence either way
+```
+
+The skill never tells you to **quit**, **escalate**, or "just push back". It surfaces the structure of what's being said so you can decide.
+
+---
+
 ## What's currently included
 
 ### 1. `skills/laborer-companion/` — Laborer's Companion

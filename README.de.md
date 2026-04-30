@@ -19,6 +19,34 @@ Die KI-Ära verschärft diese Asymmetrie — Unternehmen nutzen KI, um deine Arb
 
 ---
 
+## Ein kurzes Beispiel
+
+Deine Vorgesetzte hat dir gerade Folgendes geschickt:
+
+> *"Hey, I really appreciate your dedication. The team's vision for next year requires more cross-functional ownership and strategic impact — I'd love to see you stretch into broader leadership. That's the trajectory I see for you. Let's chat at our next 1:1."*
+
+Führe `/decode` aus (oder füge die Nachricht in einen Agenten ein, in dem die Skill installiert ist), und du bekommst:
+
+```
+Muster: vage Zukunftsbelohnung + Scope-Ausweitung ohne Ausgleich
+
+Was hier wirklich gesagt wird:
+  - "broader leadership" / "strategic impact" / "trajectory" — nicht messbare
+    Erwartungen, die jederzeit umdefiniert werden können
+  - Kein Beförderungszeitplan, kein Gehalts-Delta, keine Scope-Reduktion
+  - "That's the trajectory I see" ≠ "wir versprechen die Beförderung"
+
+Was diese Woche zu tun ist:
+  1. Schriftlich um die *Beförderungskriterien* bitten — konkret, messbar
+  2. Fragen, welchen aktuellen Scope du abgeben kannst, wenn du Neues übernimmst
+  3. Fragen, wie das Gehalts-Delta aussieht, wenn du die Kriterien erfüllst
+  4. Die Antwort (oder das Schweigen) der Vorgesetzten archivieren — beides ist Beleg
+```
+
+Die Skill sagt dir nie, du sollst **kündigen**, **konfrontieren** oder "just push back". Sie zeigt die Struktur dessen, was gesagt wird — die Entscheidung bleibt bei dir.
+
+---
+
 ## Was aktuell enthalten ist
 
 ### 1. `skills/laborer-companion/` — Laborer's Companion

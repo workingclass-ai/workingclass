@@ -19,6 +19,34 @@ La era de la IA agrava esta asimetría — las empresas usan IA para destilar tu
 
 ---
 
+## Un ejemplo rápido
+
+Tu manager te acaba de mandar esto:
+
+> *"Hey, I really appreciate your dedication. The team's vision for next year requires more cross-functional ownership and strategic impact — I'd love to see you stretch into broader leadership. That's the trajectory I see for you. Let's chat at our next 1:1."*
+
+Ejecuta `/decode` (o pega el mensaje en cualquier agente con la skill instalada) y obtienes:
+
+```
+Patrón: recompensa-futura-vaga + ampliación de alcance sin compensación
+
+Qué se está diciendo en realidad:
+  - "broader leadership" / "strategic impact" / "trajectory" — expectativas no
+    medibles que el manager puede redefinir en cualquier momento
+  - No hay calendario de promoción, ni delta salarial, ni reducción de scope
+  - "That's the trajectory I see" ≠ "vamos a promoverte"
+
+Lo que harías esta semana:
+  1. Responder pidiendo los *criterios de promoción* por escrito — específicos y medibles
+  2. Preguntar qué scope existente puedes soltar al asumir el nuevo
+  3. Preguntar el delta salarial si cumples esos criterios
+  4. Guardar la respuesta del manager (o el silencio) — en ambos casos es evidencia
+```
+
+La skill nunca te dice **renunciar**, **enfrentarte** ni "just push back". Te expone la estructura de lo que se está diciendo y tú decides.
+
+---
+
 ## Qué incluye actualmente
 
 ### 1. `skills/laborer-companion/` — Laborer's Companion
