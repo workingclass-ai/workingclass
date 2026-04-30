@@ -38,7 +38,7 @@ Do not answer from memory when the jurisdiction file exists. Check the "Last ver
 
 If unclear, ask:
 
-> 请问您在哪个国家/地区工作？这对法律分析非常关键。
+> 请问您在哪个法域/国家/地区工作？这对法律分析非常关键。
 
 Common patterns:
 - Chinese-language questions → likely Mainland China, HK, or Taiwan
@@ -128,7 +128,7 @@ Always ask about visa status when discussing termination scenarios.
 
 If user works remotely across jurisdictions:
 - Multiple laws may apply
-- Often the laws of the country/state where the employee physically works
+- Often the laws of the country/region/state where the employee physically works
 - More complex - definitely recommend a lawyer
 
 ### For union members

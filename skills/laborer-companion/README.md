@@ -38,7 +38,7 @@ This tool's goal is to give you an assistant that can see through these tactics.
 | 3. 绩效review清醒解读 | 看穿review背后的真实意图 | `references/performance-review-patterns.md` |
 | 4. 跳槽留任决策框架 | 基于真实利益做出选择 | `references/stay-or-leave-framework.md` |
 | 5. 历史视角咨询 | 从过去150年工人运动史中找到类似案例 | `references/historical-cases.md` |
-| 6. 劳动法快速查询 | 8个法域的劳动法地图 + 单独法域文件 | `references/labor-law-quick-reference.md` |
+| 6. 劳动法快速查询 | 8个法域条目，覆盖9个具名法域/地区 | `references/labor-law-quick-reference.md` |
 | 7. 薪资谈判脚本 | 完整谈判playbook | `references/salary-negotiation-playbook.md` |
 | 8. PIP应对剧本 | 从识别预警到谈severance的全流程 | `references/pip-survival-playbook.md` |
 | 9. 找工作和面试 | 求职全生命周期：识别陷阱、面试反操控、offer决策 | `references/job-search-playbook.md` |
@@ -112,7 +112,158 @@ cp -R laborer-companion/ ~/.claude/skills/
 /jobsearch   - 模块9：找工作和面试
 ```
 
-### 4. 模块组合 / Module Combinations
+### 4. 劳动法覆盖范围 / Labor Law Coverage
+
+模块6是法律地图，不是法律建议。它目前有 **8个法域条目**，覆盖 **9个具名法域/地区**：
+
+| 法域条目 | 具名法域/地区 | Reference |
+|---|---|---|
+| 中国大陆 | 中国大陆 | `references/labor-law-china-mainland.md` |
+| 香港 / 台湾 | 香港（地区/法域）、台湾（地区/法域） | `references/labor-law-hong-kong-taiwan.md` |
+| 美国 | United States | `references/labor-law-united-states.md` |
+| 加拿大 | Canada | `references/labor-law-canada.md` |
+| 澳大利亚 | Australia | `references/labor-law-australia.md` |
+| 英国 | United Kingdom | `references/labor-law-united-kingdom.md` |
+| 欧盟 | European Union | `references/labor-law-european-union.md` |
+| 印度 | India | `references/labor-law-india.md` |
+
+计数方式：
+
+- **8个法域条目**：因为香港和台湾在同一个 reference 文件里，欧盟作为区域总览处理。
+- **9个具名法域/地区**：中国大陆、香港、台湾、美国、加拿大、澳大利亚、英国、欧盟、印度。
+- 香港和台湾必须标注为**地区/法域**，不是国家。
+- 欧盟文件是区域地图，包含德国、法国、荷兰提示，但不是每个欧盟成员国的完整细则。
+
+### 5. 多语言支持 / Language Support
+
+当前支持这些输出语言：
+
+| Language | Notes |
+|---|---|
+| 简体中文 | 默认中文 |
+| 繁體中文 | 适合香港/台湾用户；会尽量使用本地常用术语 |
+| English | Supported |
+| Español / Spanish | Supported |
+| Français / French | Supported |
+| Português / Portuguese | Supported |
+| Deutsch / German | Supported |
+
+默认规则：用户用什么语言提问，skill 就用同一语言回答；如果用户指定输出语言，以用户指定为准。法律名称、政府机构、合同条款等会保留官方原文，并在必要时加简短翻译。
+
+Examples:
+
+```text
+/law
+Trabajo en España para una empresa estadounidense en remoto. ¿Qué jurisdicción laboral debería revisar primero?
+```
+
+```text
+/salary
+I received an offer with base, bonus and RSUs. Please draft a counter-offer email in English.
+```
+
+```text
+/decode
+Mon manager m'a écrit que je dois "show more ownership" sans objectifs précis. Peux-tu analyser ce message ?
+```
+
+```text
+/review
+Ich habe ein Performance Review bekommen. Bitte analysiere, ob es ein Soft-PIP-Signal ist.
+```
+
+### 6. 示例教程 / Example Tutorials
+
+#### Tutorial A: 不知道该用哪个模块
+
+```text
+/triage
+我最近感觉公司的风向不对，但说不清。经理对我的态度变了，也开始把我排除在一些会议外。
+```
+
+预期路径：`/triage` → `/scan` → 可能进入 `/review` 或 `/pip`。
+
+#### Tutorial B: 解读老板/HR话术
+
+```text
+/decode
+帮我看看这封HR邮件是什么意思：
+[粘贴脱敏后的邮件，不要包含公司机密、客户名、源码、真实人名]
+```
+
+适合：老板画饼、HR劝你"自愿"、公司要求无偿加班、AI替代相关公告。
+
+#### Tutorial C: 绩效review是否危险
+
+```text
+/review
+这是我的年度review：
+[粘贴review]
+
+补充背景：
+- 去年 rating 是 exceeds，今年是 meets
+- 最近经理开始要求我写更多 weekly update
+- 我想知道这是普通反馈还是PIP前兆
+```
+
+适合：模糊 leadership / ownership / strategic impact、rating 下降、软PIP信号。
+
+#### Tutorial D: 劳动法问题
+
+```text
+/law
+我在台湾工作，公司说劳基法还是两周84小时，所以这周排48小时没问题。现在标准工时到底是多少？
+```
+
+法律类问题请尽量提供：
+
+- 工作法域/国家/地区、州/省/城市
+- 员工/contractor/兼职/派遣/实习身份
+- 合同管辖地
+- 是否已被解雇、是否有签字期限
+- 是否涉及签证、怀孕/产假、病假、工伤、歧视、骚扰、报复
+
+#### Tutorial E: 薪资谈判
+
+```text
+/salary
+我拿到一个offer：
+- base: 50万
+- bonus: 15%
+- RSU: 30万/4年
+- sign-on: 0
+
+市场同级 base 大概55-65万。帮我写一个counter offer脚本。
+```
+
+适合：新offer谈判、在职加薪、低薪多年后跳槽、识别压榨型offer。
+
+#### Tutorial F: 刚被裁或被要求签协议
+
+```text
+我刚被裁了。HR给我一份severance agreement，要我今天签。我现在该做什么？
+```
+
+预期路径：先进入 `references/layoff-first-72-hours.md`。第一原则：不要当天匆忙签字，不要拿公司机密，只抢救个人合法证据。
+
+#### Tutorial G: PIP危机
+
+```text
+/pip
+经理今天告诉我要进PIP，60天，HR下周kick-off。我有房贷和家庭压力，现在很慌。
+```
+
+预期输出：4条路径（尝试通过、表面配合+私下找工作、谈severance、法律对抗）和24-48小时行动清单。
+
+#### Tutorial H: 急性心理危机
+
+```text
+我今天被告知要进PIP，我觉得撑不下去了，今晚可能会做伤害自己的事。
+```
+
+这会触发 `references/acute-crisis-escalation.md`。此时 skill 会停下所有职场策略，先处理当下安全。
+
+### 7. 模块组合 / Module Combinations
 
 很多场景需要多个模块配合。**只需把你的情况告诉 agent，它会自动调用合适的模块组合。**
 
@@ -153,7 +304,8 @@ laborer-companion/
 │   ├── job-search-playbook.md            # 模块9
 │   ├── red-flag-scanner.md               # 工具0b
 │   ├── layoff-first-72-hours.md          # 工具0c
-│   └── privacy-and-opsec.md              # 工具0d
+│   ├── privacy-and-opsec.md              # 工具0d
+│   └── language-and-localization.md      # 多语言与地区标签
 └── commands/
     ├── triage.md
     ├── scan.md
@@ -179,16 +331,18 @@ laborer-companion/
 
 ## 适用法域 / Covered Jurisdictions
 
-模块6覆盖8个法域：
+模块6有 **8个法域条目**，覆盖 **9个具名法域/地区**：
 
 - 中国大陆 / Mainland China
-- 香港、台湾 / Hong Kong, Taiwan
+- 香港、台湾 / Hong Kong region, Taiwan region
 - 美国（联邦+加州/纽约重点）/ United States
 - 加拿大 / Canada
 - 澳大利亚 / Australia
 - 英国 / United Kingdom
 - 欧盟 / European Union
 - 印度 / India
+
+说明：香港和台湾是不同地区/法域，不是国家；它们放在同一个 reference 文件中。欧盟是区域总览，不等于每个成员国都有完整独立规则。
 
 ## 重要免责声明 / Important Disclaimer
 
@@ -202,10 +356,12 @@ laborer-companion/
 
 - 你遇到的新型职场话术（让模块1更完整）
 - 你了解的历史劳工运动案例（让模块5更丰富）
-- 你所在国家/地区的劳动法相关知识（让模块6更准确）
+- 你所在国家/地区/法域的劳动法相关知识（让模块6更准确）
 - 你成功的薪资谈判案例（让模块7更具说服力）
 - 你的PIP经历（让模块8更真实）
 - 你的求职故事（让模块9更具针对性）
+- 更多 README 教程、完整 walkthrough、真实但已脱敏的示例 prompt
+- 西班牙语、法语、葡萄牙语、德语的真实使用示例
 
 提一个 issue 或 PR 即可。
 

@@ -6,7 +6,7 @@
 
 ## How to use
 
-1. Identify the user's **work jurisdiction**: country/region, state/province, city when relevant, and whether they are employee/contractor/worker.
+1. Identify the user's **work jurisdiction**: country/region/jurisdiction, state/province, city when relevant, and whether they are employee/contractor/worker.
 2. Read only the matching jurisdiction file below.
 3. If the user is remote, cross-border, on a visa/work permit, union-covered, or facing dismissal/discrimination/harassment, recommend local legal advice early.
 4. For current legal thresholds, deadlines, minimum wages, or statutory formulas, prefer official sources linked in the jurisdiction file.
@@ -23,6 +23,8 @@
 | United Kingdom | `references/labor-law-united-kingdom.md` | UK, England, Scotland, Wales, Northern Ireland, ACAS, tribunal |
 | European Union | `references/labor-law-european-union.md` | EU, Germany, France, Netherlands, works council, AI Act |
 | India | `references/labor-law-india.md` | India, labour codes, IT services, forced resignation, bond |
+
+Label Hong Kong and Taiwan as **regions/jurisdictions**, not countries. Label the EU as a regional legal framework.
 
 ## Universal First Questions
 

@@ -41,6 +41,11 @@
 | 16 | 台湾标准工时 | law | P0 | | |
 | 17 | 美国FLSA exempt门槛 | law | P0 | | |
 | 18 | 印度劳动法典2025实施 | law | P0 | | |
+| 19 | Spanish salary negotiation | salary | P1 | | |
+| 20 | French performance review | review | P1 | | |
+| 21 | Portuguese overtime analysis | overtime | P1 | | |
+| 22 | German EU/member-state law framing | law | P1 | | |
+| 23 | HK/Taiwan region label | law | P0 | | |
 
 图例 / Legend:
 - ✅ Pass — 满足所有 must-appear，无 must-not-appear

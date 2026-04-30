@@ -23,11 +23,16 @@
 | 16 | 台湾标准工时必须用8小时/日、40小时/周 | law | P0 | zh |
 | 17 | 美国FLSA exempt薪资门槛不能误用被撤销的2024规则 | law | P0 | en |
 | 18 | 印度劳动法必须反映2025年四部劳动法典实施 | law | P0 | zh |
+| 19 | Spanish salary negotiation should answer in Spanish | salary | P1 | es |
+| 20 | French performance review analysis should answer in French | review | P1 | fr |
+| 21 | Portuguese overtime analysis should answer in Portuguese | overtime | P1 | pt |
+| 22 | German legal question should answer in German and route through EU/member-state framing | law | P1 | de |
+| 23 | Hong Kong and Taiwan must be labelled as regions or jurisdictions, not countries | law | P0 | en |
 
 ## 优先级分布 / Priority distribution
 
-- P0: 15 (every release)
-- P1: 3 (weekly / before major changes)
+- P0: 16 (every release)
+- P1: 7 (weekly / before major changes)
 
 ## 模块覆盖 / Module coverage
 
@@ -36,11 +41,11 @@
 - decode: 01, 02
 - history → jump: 10
 - jump: 05
-- law: 06, 12, 15, 16, 17, 18
-- overtime: 03
+- law: 06, 12, 15, 16, 17, 18, 22, 23
+- overtime: 03, 21
 - pip: 08
-- review: 04
-- salary: 07
+- review: 04, 20
+- salary: 07, 19
 - triage → layoff-first-72-hours: 09
 - triage → scan: 11
 

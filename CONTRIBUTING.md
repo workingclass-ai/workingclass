@@ -64,6 +64,28 @@
 - 现有模块的 prompt 优化
 - 隐私 / OPSEC 实践改进
 
+## 本地测试 / Running tests
+
+```bash
+# 装依赖（任选一个）
+uv sync                            # uv 用户
+pip install -e ".[dev]"            # pip 用户
+
+# 单元测试 + 结构校验
+pytest -m "not e2e"
+
+# 端到端测试（用 stub LLM，不依赖任何 API key）
+pytest -m e2e
+
+# 校验 skill / cases 结构（CI 也会跑这个）
+python evals/validate_structure.py --strict
+
+# 加完 case 后重建索引
+python evals/build_index.py
+```
+
+CI（`.github/workflows/ci.yml`）会在 push / PR 上自动跑这些检查。
+
 ## 工作流
 
 1. **先开 issue 讨论**——除非是非常小的改动（typo、补例子）

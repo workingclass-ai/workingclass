@@ -14,7 +14,11 @@ __pycache__/
 *$py.class
 .pytest_cache/
 .venv/
+.venv-*/
 venv/
+*.egg-info/
+.coverage
+htmlcov/
 
 # Editor
 .idea/
