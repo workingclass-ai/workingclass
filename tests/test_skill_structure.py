@@ -14,6 +14,7 @@ from textwrap import dedent
 import pytest
 
 from validate_structure import (
+    CRISIS_MAX_AGE_DAYS,
     Severity,
     collect_referenced_paths,
     parse_frontmatter,
@@ -21,6 +22,7 @@ from validate_structure import (
     validate_cases,
     validate_agent_support_files,
     validate_command_files,
+    validate_crisis_freshness,
     validate_labor_law_dates,
     validate_repo,
     validate_skill_references,
@@ -560,6 +562,69 @@ class TestValidateLaborLawDates:
             "Real labor-law files missing `Last verified`:\n"
             + "\n".join(i.format() for i in date_errors)
         )
+
+
+# ---------------------------------------------------------------------------
+# Crisis freshness
+# ---------------------------------------------------------------------------
+
+
+class TestValidateCrisisFreshness:
+    def _write(self, tmp_path: Path, body: str) -> Path:
+        path = tmp_path / "acute-crisis-escalation.md"
+        path.write_text(body, encoding="utf-8")
+        return path
+
+    def test_fresh_stamp_no_issues(self, tmp_path: Path):
+        from datetime import date
+
+        path = self._write(
+            tmp_path,
+            f"# crisis\n\n> Hotlines last verified: {date.today().isoformat()}\n",
+        )
+        assert validate_crisis_freshness(path) == []
+
+    def test_missing_file_is_error(self, tmp_path: Path):
+        ghost = tmp_path / "absent.md"
+        issues = validate_crisis_freshness(ghost)
+        assert issues and issues[0].code == "CRISIS_FILE_MISSING"
+
+    def test_missing_stamp_is_error(self, tmp_path: Path):
+        path = self._write(tmp_path, "# crisis\n\nbody without stamp\n")
+        issues = validate_crisis_freshness(path)
+        assert issues and issues[0].code == "CRISIS_NO_VERIFICATION_DATE"
+
+    def test_bad_date_format_is_error(self, tmp_path: Path):
+        # Regex requires 4-2-2 digits, so this case really exercises the
+        # "month/day out of range" branch (e.g. month 13).
+        path = self._write(tmp_path, "Hotlines last verified: 2026-13-99\n")
+        issues = validate_crisis_freshness(path)
+        assert issues and issues[0].code == "CRISIS_BAD_DATE_FORMAT"
+
+    def test_stale_stamp_is_warning(self, tmp_path: Path):
+        from datetime import date, timedelta
+
+        old = (date.today() - timedelta(days=CRISIS_MAX_AGE_DAYS + 30)).isoformat()
+        path = self._write(tmp_path, f"Hotlines last verified: {old}\n")
+        issues = validate_crisis_freshness(path)
+        assert len(issues) == 1
+        assert issues[0].severity is Severity.WARNING
+        assert issues[0].code == "CRISIS_STAMP_STALE"
+
+    def test_case_insensitive_pattern(self, tmp_path: Path):
+        from datetime import date
+
+        path = self._write(
+            tmp_path,
+            f"HOTLINES LAST VERIFIED: {date.today().isoformat()}\n",
+        )
+        assert validate_crisis_freshness(path) == []
+
+    def test_real_corpus_clean(self):
+        """Smoke check against the live acute-crisis-escalation.md."""
+        issues = validate_crisis_freshness()
+        errors = [i for i in issues if i.severity is Severity.ERROR]
+        assert errors == [], "\n".join(i.format() for i in errors)
 
 
 # ---------------------------------------------------------------------------

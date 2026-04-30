@@ -1,5 +1,7 @@
 # 急性危机升级 / Acute Crisis Escalation
 
+> **Hotlines last verified: 2026-04-30.** Crisis numbers change. The list below is a starting point, not a guarantee. CI opens a verification issue every 90 days; if you spot a stale or wrong number sooner, please open a PR.
+>
 > 当工作场景升级为生命安全风险时，**停下所有职场策略**，先稳住人。
 
 本文是一份"短而急"的协议。它不是治疗，也不是诊断。它的目的是让你在用户出现自伤/自杀/严重崩溃信号时，做出**最低限度但必须做的事**——把用户连接到真实的人、真实的资源，并保持对话直到他们行动。

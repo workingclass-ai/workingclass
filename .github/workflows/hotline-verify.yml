@@ -1,0 +1,107 @@
+name: Hotline Verification (quarterly)
+
+# Wrong crisis-hotline numbers in a suicide-risk moment is the worst possible
+# failure mode in this project. This workflow runs every 90 days and opens
+# a tracking issue with the current verification stamp + a checklist of the
+# 8 jurisdictions to re-confirm against official sources.
+#
+# Manual trigger is also available so a maintainer can spot-check at any time.
+
+on:
+  schedule:
+    # 09:00 UTC on the 1st of Jan / Apr / Jul / Oct ≈ quarterly
+    - cron: "0 9 1 1,4,7,10 *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  open-issue:
+    name: Open quarterly verification issue
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Read current stamp
+        id: stamp
+        run: |
+          set -euo pipefail
+          FILE=skills/laborer-companion/references/acute-crisis-escalation.md
+          STAMP=$(grep -oE 'Hotlines last verified[: ]+[0-9]{4}-[0-9]{2}-[0-9]{2}' "$FILE" \
+            | head -1 \
+            | grep -oE '[0-9]{4}-[0-9]{2}-[0-9]{2}' || true)
+          if [ -z "$STAMP" ]; then
+            STAMP="UNKNOWN"
+          fi
+          echo "stamp=$STAMP" >> "$GITHUB_OUTPUT"
+          echo "today=$(date -u +%Y-%m-%d)" >> "$GITHUB_OUTPUT"
+
+      - name: Create or refresh tracking issue
+        uses: actions/github-script@v7
+        env:
+          STAMP: ${{ steps.stamp.outputs.stamp }}
+          TODAY: ${{ steps.stamp.outputs.today }}
+        with:
+          script: |
+            const stamp = process.env.STAMP;
+            const today = process.env.TODAY;
+            const title = `chore(crisis): verify hotline numbers — quarterly check ${today}`;
+
+            // Look for an existing open verification issue from this workflow.
+            const { data: existing } = await github.rest.search.issuesAndPullRequests({
+              q: `repo:${context.repo.owner}/${context.repo.repo} is:issue is:open in:title "verify hotline numbers — quarterly check"`,
+            });
+            if (existing.total_count > 0) {
+              core.info(`Open verification issue already exists: #${existing.items[0].number}`);
+              return;
+            }
+
+            const body = [
+              `## Quarterly hotline verification`,
+              ``,
+              `**Current stamp**: \`Hotlines last verified: ${stamp}\``,
+              `**Today**: \`${today}\``,
+              ``,
+              `Numbers can change without notice. Open the listed sources, confirm the numbers in \`skills/laborer-companion/references/acute-crisis-escalation.md\` still match, then update the stamp and close this issue.`,
+              ``,
+              `### Jurisdictions to verify`,
+              ``,
+              `- [ ] **中国大陆** — 北京心理危机研究与干预中心 010-82951332 · 全国公益心理援助热线 400-161-9995`,
+              `      Source: https://psych.bjhmoh.cn/ · 国家卫健委公开资料`,
+              `- [ ] **香港** — 撒玛利亚防止自杀会 2389-2222`,
+              `      Source: https://www.sbhk.org.hk/`,
+              `- [ ] **台湾** — 1925 安心专线`,
+              `      Source: https://dep.mohw.gov.tw/DOMHAOH/`,
+              `- [ ] **United States / Canada** — 988 (Suicide & Crisis Lifeline)`,
+              `      Sources: https://988lifeline.org/ · https://988.ca/`,
+              `- [ ] **United Kingdom** — Samaritans 116 123`,
+              `      Source: https://www.samaritans.org/`,
+              `- [ ] **Australia** — Lifeline 13 11 14 · 13YARN 13 92 76`,
+              `      Sources: https://www.lifeline.org.au/ · https://www.13yarn.org.au/`,
+              `- [ ] **EU multi-country** — 116 123`,
+              `      Source: https://findahelpline.com/ · per-country state pages`,
+              `- [ ] **India** — iCall 9152987821 · Vandrevala Foundation 1860-2662-345`,
+              `      Sources: https://icallhelpline.org/ · https://www.vandrevalafoundation.com/`,
+              ``,
+              `### When you are done`,
+              ``,
+              `1. If any number changed: update \`skills/laborer-companion/references/acute-crisis-escalation.md\` and add a CHANGELOG entry under \`[Unreleased]\`.`,
+              `2. Update the stamp at the top of that file to today's date: \`Hotlines last verified: ${today}\`.`,
+              `3. Tick every checkbox above (do not check items you couldn't actually verify — leave a comment explaining why instead).`,
+              `4. Close this issue.`,
+              ``,
+              `If you find a number that has changed, please also flag it in #security or via Security Advisory so we can backport the fix to anyone running an installed copy of the skill.`,
+              ``,
+              `<sub>Opened automatically by \`.github/workflows/hotline-verify.yml\`. Cron: every 90 days.</sub>`,
+            ].join("\n");
+
+            const { data: issue } = await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title,
+              body,
+              labels: ["safety", "crisis", "chore"],
+            });
+            core.info(`Created verification issue #${issue.number}`);

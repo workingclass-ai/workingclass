@@ -1,0 +1,65 @@
+# Code owners for workingclass-ai/workingclass.
+# Syntax: https://docs.github.com/en/repositories/managing-your-repositories-settings-and-features/customizing-your-repository/about-code-owners
+#
+# These rules govern *review requests*, not merge permissions. The last matching
+# pattern wins, so order matters — most specific rules go at the bottom.
+#
+# When you add a contributor, replace `@workingclass-ai` with their GitHub handle
+# in the relevant rules below. The placeholder is intentional — it routes review
+# to the project lead until per-area maintainers exist.
+
+# Default: project lead reviews everything not matched below.
+*                                       @workingclass-ai
+
+# --- Engineering / runner / CI ---
+# Code paths benefit from technical review even when the change looks small.
+/evals/                                 @workingclass-ai
+/tools/                                 @workingclass-ai
+/tests/                                 @workingclass-ai
+/.github/                               @workingclass-ai
+/Makefile                               @workingclass-ai
+/pyproject.toml                         @workingclass-ai
+
+# --- Skill content ---
+# These pages set the skill's voice and the user's mental model. Reviewers
+# should check tone, accuracy, and that no specific company / lawyer / union /
+# political stance is being promoted.
+/skills/laborer-companion/SKILL.md      @workingclass-ai
+/skills/laborer-companion/commands/     @workingclass-ai
+/skills/laborer-companion/references/   @workingclass-ai
+
+# --- Safety-critical ---
+# Crisis escalation + privacy: lives + reputations on the line. Require
+# project-lead review for any change here, even from trusted maintainers.
+/skills/laborer-companion/references/acute-crisis-escalation.md   @workingclass-ai
+/skills/laborer-companion/references/privacy-and-opsec.md         @workingclass-ai
+
+# --- Labor-law content ---
+# Per-jurisdiction reviewers can be added here as they join the project.
+# Keep the global owner in addition so nothing ships unreviewed.
+/skills/laborer-companion/references/labor-law-china-mainland.md     @workingclass-ai
+/skills/laborer-companion/references/labor-law-hong-kong-taiwan.md   @workingclass-ai
+/skills/laborer-companion/references/labor-law-united-states.md      @workingclass-ai
+/skills/laborer-companion/references/labor-law-canada.md             @workingclass-ai
+/skills/laborer-companion/references/labor-law-australia.md          @workingclass-ai
+/skills/laborer-companion/references/labor-law-united-kingdom.md     @workingclass-ai
+/skills/laborer-companion/references/labor-law-european-union.md     @workingclass-ai
+/skills/laborer-companion/references/labor-law-india.md              @workingclass-ai
+/skills/laborer-companion/references/labor-law-quick-reference.md    @workingclass-ai
+
+# --- Translations ---
+# Per-language reviewers can be added here. The global owner catches structure
+# regressions; the language reviewer catches translation quality.
+/README.md                              @workingclass-ai
+/README.en.md                           @workingclass-ai
+/README.zh-TW.md                        @workingclass-ai
+/README.es.md                           @workingclass-ai
+/README.fr.md                           @workingclass-ai
+/README.pt.md                           @workingclass-ai
+/README.de.md                           @workingclass-ai
+/skills/laborer-companion/references/language-and-localization.md   @workingclass-ai
+
+# --- Eval content ---
+# New cases must be reviewed for: alignment with the skill's mission, no PII,
+# no political slant, must-appear / must-not-appear lists are testable.
+/evals/cases/                           @workingclass-ai

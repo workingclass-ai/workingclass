@@ -31,6 +31,12 @@ SKILL_FILE = SKILL_DIR / "SKILL.md"
 CASES_DIR = REPO_ROOT / "evals" / "cases"
 AGENTS_FILE = REPO_ROOT / "AGENTS.md"
 CURSOR_RULE_FILE = REPO_ROOT / ".cursor" / "rules" / "laborer-companion.mdc"
+CRISIS_FILE = SKILL_DIR / "references" / "acute-crisis-escalation.md"
+
+# Crisis hotlines must be re-verified at most every N days. Hard cap at 180 (~6 months).
+CRISIS_MAX_AGE_DAYS = 180
+# Pattern: `Hotlines last verified: YYYY-MM-DD` (case-insensitive on the prefix).
+CRISIS_DATE_RE = re.compile(r"hotlines\s+last\s+verified[:\s]+(\d{4}-\d{2}-\d{2})", re.IGNORECASE)
 
 REQUIRED_CASE_FIELDS = ("id", "title", "module_expected", "priority", "input_lang")
 REQUIRED_CASE_SECTIONS = ("输入", "必须出现")
@@ -508,6 +514,63 @@ def validate_labor_law_dates(references_dir: Path = REFERENCES_DIR) -> list[Issu
 # ---------------------------------------------------------------------------
 
 
+def validate_crisis_freshness(crisis_file: Path = CRISIS_FILE) -> list[Issue]:
+    """Acute-crisis-escalation.md must carry a `Hotlines last verified: YYYY-MM-DD`
+    stamp, and the stamp must be no older than CRISIS_MAX_AGE_DAYS.
+
+    Stale or missing stamp is a WARNING (not error) — we don't want to block CI
+    on a calendar threshold while a maintainer is mid-response. The quarterly
+    cron in `.github/workflows/hotline-verify.yml` opens a tracking issue.
+    """
+    from datetime import date, datetime as _datetime
+
+    if not crisis_file.exists():
+        return [
+            Issue(
+                Severity.ERROR,
+                "CRISIS_FILE_MISSING",
+                crisis_file,
+                "acute-crisis-escalation.md is missing — this is the safety-critical reference",
+            )
+        ]
+
+    text = crisis_file.read_text(encoding="utf-8")
+    match = CRISIS_DATE_RE.search(text)
+    if not match:
+        return [
+            Issue(
+                Severity.ERROR,
+                "CRISIS_NO_VERIFICATION_DATE",
+                crisis_file,
+                "missing `Hotlines last verified: YYYY-MM-DD` stamp",
+            )
+        ]
+
+    try:
+        verified = _datetime.strptime(match.group(1), "%Y-%m-%d").date()
+    except ValueError:
+        return [
+            Issue(
+                Severity.ERROR,
+                "CRISIS_BAD_DATE_FORMAT",
+                crisis_file,
+                f"could not parse date `{match.group(1)}` (expected YYYY-MM-DD)",
+            )
+        ]
+
+    age = (date.today() - verified).days
+    if age > CRISIS_MAX_AGE_DAYS:
+        return [
+            Issue(
+                Severity.WARNING,
+                "CRISIS_STAMP_STALE",
+                crisis_file,
+                f"hotlines verified {age} days ago — re-verify (max age {CRISIS_MAX_AGE_DAYS}d)",
+            )
+        ]
+    return []
+
+
 def validate_repo() -> list[Issue]:
     return [
         *validate_skill_references(),
@@ -515,6 +578,7 @@ def validate_repo() -> list[Issue]:
         *validate_cases(),
         *validate_agent_support_files(),
         *validate_labor_law_dates(),
+        *validate_crisis_freshness(),
     ]
 
 

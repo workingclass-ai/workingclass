@@ -1,0 +1,42 @@
+version: 2
+updates:
+  # GitHub Actions — workflow files reference action versions like
+  # `actions/checkout@v4`. Dependabot bumps these when major versions land.
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "github-actions"
+    commit-message:
+      prefix: "ci"
+      include: "scope"
+    groups:
+      # Roll up minor/patch bumps so we don't drown in PRs each week.
+      actions-minor-patch:
+        update-types:
+          - "minor"
+          - "patch"
+
+  # Python — pyproject.toml dev dependencies (pytest, pytest-cov, setuptools).
+  # Production deps are empty for this project, so this mostly catches dev tools.
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "python"
+    commit-message:
+      prefix: "deps"
+      include: "scope"
+    groups:
+      python-minor-patch:
+        update-types:
+          - "minor"
+          - "patch"

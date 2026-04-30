@@ -1,0 +1,117 @@
+name: Release
+
+# Triggered when a maintainer pushes a tag matching `v<major>.<minor>.<patch>`.
+# The workflow:
+#   1. Verifies SKILL.md frontmatter `version:` matches the tag (minus the leading `v`).
+#   2. Verifies CHANGELOG.md has a `## [<version>]` section (not `[Unreleased]`).
+#   3. Verifies the full test suite + structural validator are green.
+#   4. Builds a tarball of the skill (`skills/laborer-companion/`) for distribution.
+#   5. Creates a GitHub Release with the CHANGELOG section as the body and the
+#      tarball attached.
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+permissions:
+  contents: write   # required to create releases + upload assets
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: Release ${{ github.ref_name }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+
+      - name: Verify SKILL.md version matches tag
+        run: |
+          set -euo pipefail
+          TAG_VERSION="${GITHUB_REF_NAME#v}"
+          SKILL_VERSION=$(grep -m1 -E '^version:' skills/laborer-companion/SKILL.md \
+            | sed -E 's/^version:[[:space:]]*//; s/[[:space:]]+$//; s/^["'\'']//; s/["'\'']$//')
+          if [ -z "$SKILL_VERSION" ]; then
+            echo "::error::SKILL.md has no `version:` frontmatter field"
+            exit 1
+          fi
+          if [ "$SKILL_VERSION" != "$TAG_VERSION" ]; then
+            echo "::error::Tag is v$TAG_VERSION but SKILL.md says version $SKILL_VERSION"
+            exit 1
+          fi
+          echo "✓ skill version $SKILL_VERSION matches tag $GITHUB_REF_NAME"
+
+      - name: Extract CHANGELOG section for this version
+        id: changelog
+        run: |
+          set -euo pipefail
+          TAG_VERSION="${GITHUB_REF_NAME#v}"
+          # Pull lines from `## [TAG_VERSION]` up to (but not including) the next `## [`.
+          SECTION=$(awk -v ver="$TAG_VERSION" '
+            $0 ~ "^## \\[" ver "\\]" { capture=1; next }
+            capture && /^## \[/ { exit }
+            capture { print }
+          ' CHANGELOG.md)
+          if [ -z "$(echo "$SECTION" | tr -d '[:space:]')" ]; then
+            echo "::error::CHANGELOG.md has no `## [$TAG_VERSION]` section. Add one before tagging."
+            exit 1
+          fi
+          # Multi-line GitHub output requires the heredoc form
+          {
+            echo "body<<__CHANGELOG_EOF__"
+            echo "$SECTION"
+            echo "__CHANGELOG_EOF__"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Run validator
+        run: python evals/validate_structure.py --strict
+
+      - name: Run tests
+        run: |
+          chmod +x tests/fixtures/*.sh
+          pytest --tb=short
+
+      - name: Build skill tarball
+        id: build
+        run: |
+          set -euo pipefail
+          TAG_VERSION="${GITHUB_REF_NAME#v}"
+          OUT="laborer-companion-${TAG_VERSION}.tar.gz"
+          tar --exclude='__pycache__' --exclude='*.pyc' \
+              -czf "$OUT" -C skills laborer-companion
+          ls -lh "$OUT"
+          echo "tarball=$OUT" >> "$GITHUB_OUTPUT"
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          BODY=$(cat <<'__BODY__'
+          ${{ steps.changelog.outputs.body }}
+          __BODY__
+          )
+          # `gh release create` will fail loudly if the tag/release already exists,
+          # which is what we want — never silently overwrite a published release.
+          gh release create "$GITHUB_REF_NAME" \
+            --title "$GITHUB_REF_NAME" \
+            --notes "$BODY" \
+            --verify-tag \
+            "${{ steps.build.outputs.tarball }}"
