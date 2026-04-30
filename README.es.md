@@ -56,6 +56,10 @@ cd workingclass
 mkdir -p "${CODEX_HOME:-$HOME/.codex}/skills"
 cp -R skills/laborer-companion "${CODEX_HOME:-$HOME/.codex}/skills/"
 
+# Cursor
+# Al abrir este repo en Cursor, Cursor lee .cursor/rules/laborer-companion.mdc.
+# Para usarlo en otro repo, copia skills/laborer-companion/ y .cursor/rules/laborer-companion.mdc.
+
 # Claude Code (legacy Claude skills)
 mkdir -p ~/.claude/skills
 cp -R skills/laborer-companion ~/.claude/skills/
@@ -76,6 +80,16 @@ Luego describe tu situación laboral en el agente y la skill se activará. O usa
 /pip         - Supervivencia al PIP
 /jobsearch   - Búsqueda de empleo y entrevistas
 ```
+
+---
+
+## Soporte Codex / Cursor
+
+- **Codex**: la skill vive en `skills/laborer-companion/`; los metadatos de UI viven en `skills/laborer-companion/agents/openai.yaml`. Tras instalarla en `${CODEX_HOME:-$HOME/.codex}/skills/`, se puede activar con `$laborer-companion`.
+- **Cursor**: este repo incluye una Cursor Project Rule en `.cursor/rules/laborer-companion.mdc`. Al abrir el repo en Cursor, Agent puede usar esa regla para cargar `skills/laborer-companion/SKILL.md`.
+- **Guía general para agentes**: `AGENTS.md` en la raíz ofrece instrucciones compatibles con Codex / Cursor.
+
+Para reutilizar la skill en otro proyecto, copia `skills/laborer-companion/`, `.cursor/rules/laborer-companion.mdc` y `AGENTS.md`, manteniendo coherentes las rutas de la regla.
 
 ---
 

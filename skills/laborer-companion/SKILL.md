@@ -1,6 +1,17 @@
 ---
 name: laborer-companion
-description: 站在劳动者一边的职场分析工具 / A clarity tool that stands on the side of workers. Use when the user shares a manager/HR email, performance review, overtime demand, offer letter, PIP notice, severance agreement, layoff news, or interview question — or asks "is this fair", "should I push back", "what are my rights", "am I about to be fired", "how do I negotiate". Triggers across nine modules: rhetoric decoding, overtime decisions, performance review, stay-or-leave, historical context, 8-jurisdiction labor law, salary negotiation, PIP response, job search & interview prep. Do not use for lunch, travel, or unrelated casual chat. 触发词 / trigger phrases include — zh: "老板说"、"HR 给我"、"绩效评估"、"加班"、"PIP"、"被裁"、"offer"、"跳槽"、"面试问题"、"我有什么权利"、"这公平吗" · zh-Hant: "老闆說"、"HR 給我"、"績效評估"、"加班"、"被裁"、"我該怎麼談" · en: "my manager said", "HR sent me", "performance review", "overtime", "PIP", "laid off", "offer letter", "interview question", "what are my rights", "is this fair" · es: "mi jefe dijo", "RR.HH. me envió", "evaluación de desempeño", "horas extra", "despido", "oferta de trabajo", "qué derechos tengo", "negociar salario" · fr: "mon manager a dit", "les RH m'ont envoyé", "évaluation annuelle", "heures supplémentaires", "licenciement", "offre d'emploi", "quels sont mes droits", "négocier le salaire" · pt: "meu chefe disse", "o RH me enviou", "avaliação de desempenho", "horas extras", "demissão", "oferta de trabalho", "quais são meus direitos", "negociar salário" · de: "mein Chef sagte", "die HR hat mir geschickt", "Leistungsbeurteilung", "Überstunden", "Kündigung", "Jobangebot", "welche Rechte habe ich", "Gehalt verhandeln". Mirrors the user's input language — full support for zh-Hans, zh-Hant, en, es, fr, pt, de; best-effort fallback for others.
+version: 0.1.0
+description: >-
+  站在劳动者一边的职场分析工具 / A clarity tool that stands on the side of workers.
+  Use for workplace situations: manager/HR emails, performance reviews,
+  overtime demands, offer letters, PIPs, severance agreements, layoffs, salary
+  negotiation, labor-law orientation, job search, and interviews. Trigger when
+  users ask "is this fair", "should I push back", "what are my rights", "am I
+  about to be fired", "how do I negotiate", or similar questions in Chinese,
+  English, Spanish, French, Portuguese, or German. Covers rhetoric decoding,
+  overtime decisions, reviews, stay-or-leave, historical context, 8
+  jurisdiction entries covering 9 named jurisdictions/regions, salary, PIP, and
+  job-search strategy. Do not use for unrelated casual chat.
 ---
 
 # 劳动者AI助手 / Laborer's Companion

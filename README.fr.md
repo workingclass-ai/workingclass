@@ -56,6 +56,10 @@ cd workingclass
 mkdir -p "${CODEX_HOME:-$HOME/.codex}/skills"
 cp -R skills/laborer-companion "${CODEX_HOME:-$HOME/.codex}/skills/"
 
+# Cursor
+# Quand ce dépôt est ouvert dans Cursor, Cursor lit .cursor/rules/laborer-companion.mdc.
+# Pour l'utiliser dans un autre dépôt, copie skills/laborer-companion/ et .cursor/rules/laborer-companion.mdc.
+
 # Claude Code (legacy Claude skills)
 mkdir -p ~/.claude/skills
 cp -R skills/laborer-companion ~/.claude/skills/
@@ -76,6 +80,16 @@ Décris ensuite ta situation à l'agent : la skill s'activera. Ou utilise les sl
 /pip         - Survie au PIP
 /jobsearch   - Recherche d'emploi et entretiens
 ```
+
+---
+
+## Prise en charge Codex / Cursor
+
+- **Codex** : la skill se trouve dans `skills/laborer-companion/` ; les métadonnées d'interface se trouvent dans `skills/laborer-companion/agents/openai.yaml`. Une fois installée dans `${CODEX_HOME:-$HOME/.codex}/skills/`, elle peut être déclenchée avec `$laborer-companion`.
+- **Cursor** : ce dépôt contient une Cursor Project Rule dans `.cursor/rules/laborer-companion.mdc`. Quand le dépôt est ouvert dans Cursor, Agent peut utiliser cette règle pour charger `skills/laborer-companion/SKILL.md`.
+- **Instructions générales pour agents** : `AGENTS.md` à la racine fournit des instructions compatibles Codex / Cursor.
+
+Pour réutiliser la skill dans un autre projet, copie `skills/laborer-companion/`, `.cursor/rules/laborer-companion.mdc` et `AGENTS.md`, en gardant les chemins de la règle cohérents.
 
 ---
 

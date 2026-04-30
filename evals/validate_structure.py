@@ -29,6 +29,8 @@ COMMANDS_DIR = SKILL_DIR / "commands"
 REFERENCES_DIR = SKILL_DIR / "references"
 SKILL_FILE = SKILL_DIR / "SKILL.md"
 CASES_DIR = REPO_ROOT / "evals" / "cases"
+AGENTS_FILE = REPO_ROOT / "AGENTS.md"
+CURSOR_RULE_FILE = REPO_ROOT / ".cursor" / "rules" / "laborer-companion.mdc"
 
 REQUIRED_CASE_FIELDS = ("id", "title", "module_expected", "priority", "input_lang")
 REQUIRED_CASE_SECTIONS = ("输入", "必须出现")
@@ -48,6 +50,11 @@ ALLOWED_INPUT_LANGS = {
     "other",    # Unsupported language — exercise of the fallback path
 }
 COMMAND_REQUIRED_FRONTMATTER = ("description",)
+CURSOR_REQUIRED_FRONTMATTER = ("description", "alwaysApply")
+SKILL_REQUIRED_FRONTMATTER = ("name", "version", "description")
+SEMVER_RE = re.compile(r"^\d+\.\d+\.\d+(?:[-+][\w.\-]+)?$")
+LABOR_LAW_DATE_RE = re.compile(r"last\s+verified", re.IGNORECASE)
+LABOR_LAW_GLOB = "labor-law-*.md"
 
 
 class Severity(str, Enum):
@@ -128,6 +135,30 @@ def validate_skill_references(skill_file: Path = SKILL_FILE) -> list[Issue]:
         ]
 
     text = skill_file.read_text(encoding="utf-8")
+
+    # SKILL.md frontmatter must carry name, version (semver), description
+    fm = parse_frontmatter(text)
+    for field in SKILL_REQUIRED_FRONTMATTER:
+        if field not in fm or not fm[field].strip():
+            issues.append(
+                Issue(
+                    Severity.ERROR,
+                    "SKILL_MISSING_FIELD",
+                    skill_file,
+                    f"frontmatter missing required field `{field}`",
+                )
+            )
+    version = fm.get("version", "").strip()
+    if version and not SEMVER_RE.match(version):
+        issues.append(
+            Issue(
+                Severity.ERROR,
+                "SKILL_BAD_VERSION",
+                skill_file,
+                f"version `{version}` is not semver (e.g. 0.1.0, 1.2.3-rc1)",
+            )
+        )
+
     refs = collect_referenced_paths(text)
     for ref in sorted(refs):
         # wildcard form: `references/labor-law-*.md` should expand to >=1 match
@@ -338,6 +369,141 @@ def validate_cases(cases_dir: Path = CASES_DIR) -> list[Issue]:
 
 
 # ---------------------------------------------------------------------------
+# Agent support files — Codex/Cursor entrypoints must stay present and linked
+# ---------------------------------------------------------------------------
+
+
+def validate_agent_support_files(
+    agents_file: Path = AGENTS_FILE,
+    cursor_rule_file: Path = CURSOR_RULE_FILE,
+) -> list[Issue]:
+    issues: list[Issue] = []
+
+    if not agents_file.exists():
+        issues.append(
+            Issue(
+                Severity.ERROR,
+                "AGENTS_MISSING",
+                agents_file,
+                "AGENTS.md is missing",
+            )
+        )
+    else:
+        text = agents_file.read_text(encoding="utf-8")
+        required_mentions = (
+            "skills/laborer-companion/SKILL.md",
+            "references/labor-law-quick-reference.md",
+            "references/acute-crisis-escalation.md",
+            "Hong Kong and Taiwan",
+        )
+        for mention in required_mentions:
+            if mention not in text:
+                issues.append(
+                    Issue(
+                        Severity.ERROR,
+                        "AGENTS_MISSING_GUIDANCE",
+                        agents_file,
+                        f"missing required guidance mention `{mention}`",
+                    )
+                )
+
+    if not cursor_rule_file.exists():
+        issues.append(
+            Issue(
+                Severity.ERROR,
+                "CURSOR_RULE_MISSING",
+                cursor_rule_file,
+                "Cursor Project Rule is missing",
+            )
+        )
+    else:
+        text = cursor_rule_file.read_text(encoding="utf-8")
+        fm = parse_frontmatter(text)
+        if not fm:
+            issues.append(
+                Issue(
+                    Severity.ERROR,
+                    "CURSOR_RULE_NO_FRONTMATTER",
+                    cursor_rule_file,
+                    "Cursor rule has no YAML frontmatter",
+                )
+            )
+        for field in CURSOR_REQUIRED_FRONTMATTER:
+            if field not in fm or not str(fm[field]).strip():
+                issues.append(
+                    Issue(
+                        Severity.ERROR,
+                        "CURSOR_RULE_MISSING_FIELD",
+                        cursor_rule_file,
+                        f"frontmatter missing required field `{field}`",
+                    )
+                )
+        required_mentions = (
+            "@skills/laborer-companion/SKILL.md",
+            "skills/laborer-companion/references/labor-law-quick-reference.md",
+            "skills/laborer-companion/references/acute-crisis-escalation.md",
+            "Hong Kong and Taiwan",
+        )
+        for mention in required_mentions:
+            if mention not in text:
+                issues.append(
+                    Issue(
+                        Severity.ERROR,
+                        "CURSOR_RULE_MISSING_GUIDANCE",
+                        cursor_rule_file,
+                        f"missing required guidance mention `{mention}`",
+                    )
+                )
+
+    return issues
+
+
+# ---------------------------------------------------------------------------
+# Labor-law freshness — every labor-law-*.md (and the index) must carry a
+# "Last verified" date stamp. Stale legal information is a safety risk; this
+# check enforces that contributors cannot ship a jurisdiction file without
+# saying when it was last sanity-checked.
+# ---------------------------------------------------------------------------
+
+
+def validate_labor_law_dates(references_dir: Path = REFERENCES_DIR) -> list[Issue]:
+    issues: list[Issue] = []
+    if not references_dir.is_dir():
+        return [
+            Issue(
+                Severity.ERROR,
+                "REFERENCES_DIR_MISSING",
+                references_dir,
+                "references/ directory is missing",
+            )
+        ]
+
+    files = sorted(references_dir.glob(LABOR_LAW_GLOB))
+    if not files:
+        return [
+            Issue(
+                Severity.ERROR,
+                "LABOR_LAW_NO_FILES",
+                references_dir,
+                f"no files matching `{LABOR_LAW_GLOB}` — labor-law corpus appears empty",
+            )
+        ]
+
+    for path in files:
+        text = path.read_text(encoding="utf-8")
+        if not LABOR_LAW_DATE_RE.search(text):
+            issues.append(
+                Issue(
+                    Severity.ERROR,
+                    "LABOR_LAW_NO_VERIFICATION_DATE",
+                    path,
+                    "missing `Last verified` date stamp — legal info needs a freshness signal",
+                )
+            )
+    return issues
+
+
+# ---------------------------------------------------------------------------
 # Top-level
 # ---------------------------------------------------------------------------
 
@@ -347,6 +513,8 @@ def validate_repo() -> list[Issue]:
         *validate_skill_references(),
         *validate_command_files(),
         *validate_cases(),
+        *validate_agent_support_files(),
+        *validate_labor_law_dates(),
     ]
 
 

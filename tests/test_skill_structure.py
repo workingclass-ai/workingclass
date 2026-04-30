@@ -19,7 +19,9 @@ from validate_structure import (
     parse_frontmatter,
     validate_case_file,
     validate_cases,
+    validate_agent_support_files,
     validate_command_files,
+    validate_labor_law_dates,
     validate_repo,
     validate_skill_references,
 )
@@ -80,11 +82,20 @@ class TestCollectReferencedPaths:
 
 
 def _make_skill(tmp_path: Path, skill_body: str, files: list[str] | None = None) -> Path:
-    """Build a minimal skill dir under tmp_path and return SKILL.md path."""
+    """Build a minimal skill dir under tmp_path and return SKILL.md path.
+
+    If `skill_body` does not start with frontmatter, a valid stub frontmatter
+    is prepended so the SKILL_MISSING_FIELD / SKILL_BAD_VERSION checks pass —
+    callers that want to test those errors should pass their own frontmatter.
+    """
     skill_dir = tmp_path / "skills" / "laborer-companion"
     (skill_dir / "commands").mkdir(parents=True, exist_ok=True)
     (skill_dir / "references").mkdir(parents=True, exist_ok=True)
     skill_file = skill_dir / "SKILL.md"
+    if not skill_body.lstrip().startswith("---"):
+        skill_body = (
+            "---\nname: stub\nversion: 0.1.0\ndescription: stub\n---\n" + skill_body
+        )
     skill_file.write_text(skill_body, encoding="utf-8")
     for rel in files or []:
         path = skill_dir / rel
@@ -141,6 +152,55 @@ class TestValidateSkillReferences:
         nonexistent = tmp_path / "skills" / "ghost" / "SKILL.md"
         issues = validate_skill_references(nonexistent)
         assert issues and issues[0].code == "SKILL_MISSING"
+
+    def test_skill_missing_version_field(self, tmp_path: Path, monkeypatch):
+        # SKILL.md without `version:` — must error
+        skill = _make_skill(
+            tmp_path,
+            dedent(
+                """\
+                ---
+                name: x
+                description: y
+                ---
+                body
+                """
+            ),
+            files=[],
+        )
+        monkeypatch.setattr("validate_structure.SKILL_DIR", skill.parent)
+        codes = [i.code for i in validate_skill_references(skill)]
+        assert "SKILL_MISSING_FIELD" in codes
+
+    def test_skill_bad_version_format(self, tmp_path: Path, monkeypatch):
+        skill = _make_skill(
+            tmp_path,
+            dedent(
+                """\
+                ---
+                name: x
+                version: not-semver
+                description: y
+                ---
+                body
+                """
+            ),
+            files=[],
+        )
+        monkeypatch.setattr("validate_structure.SKILL_DIR", skill.parent)
+        codes = [i.code for i in validate_skill_references(skill)]
+        assert "SKILL_BAD_VERSION" in codes
+
+    @pytest.mark.parametrize("version", ["0.1.0", "1.0.0", "1.2.3-rc1", "10.20.30+build.5"])
+    def test_skill_accepts_semver(self, tmp_path: Path, monkeypatch, version: str):
+        skill = _make_skill(
+            tmp_path,
+            f"---\nname: x\nversion: {version}\ndescription: y\n---\nbody\n",
+            files=[],
+        )
+        monkeypatch.setattr("validate_structure.SKILL_DIR", skill.parent)
+        codes = [i.code for i in validate_skill_references(skill)]
+        assert "SKILL_BAD_VERSION" not in codes
 
 
 # ---------------------------------------------------------------------------
@@ -365,6 +425,76 @@ class TestValidateCases:
 
 
 # ---------------------------------------------------------------------------
+# validate_agent_support_files
+# ---------------------------------------------------------------------------
+
+
+class TestValidateAgentSupportFiles:
+    def test_clean_agent_support_files(self, tmp_path: Path):
+        agents = tmp_path / "AGENTS.md"
+        cursor = tmp_path / ".cursor" / "rules" / "laborer-companion.mdc"
+        cursor.parent.mkdir(parents=True)
+
+        agents.write_text(
+            dedent(
+                """\
+                # Agent instructions
+
+                Use skills/laborer-companion/SKILL.md.
+                Read references/labor-law-quick-reference.md.
+                Read references/acute-crisis-escalation.md.
+                Hong Kong and Taiwan are regions/jurisdictions.
+                """
+            ),
+            encoding="utf-8",
+        )
+        cursor.write_text(
+            dedent(
+                """\
+                ---
+                description: use the laborer skill
+                alwaysApply: false
+                ---
+
+                Use @skills/laborer-companion/SKILL.md.
+                Read skills/laborer-companion/references/labor-law-quick-reference.md.
+                Read skills/laborer-companion/references/acute-crisis-escalation.md.
+                Hong Kong and Taiwan are regions/jurisdictions.
+                """
+            ),
+            encoding="utf-8",
+        )
+
+        assert validate_agent_support_files(agents, cursor) == []
+
+    def test_missing_agent_support_files_are_errors(self, tmp_path: Path):
+        issues = validate_agent_support_files(
+            tmp_path / "AGENTS.md",
+            tmp_path / ".cursor" / "rules" / "laborer-companion.mdc",
+        )
+        codes = {i.code for i in issues}
+        assert "AGENTS_MISSING" in codes
+        assert "CURSOR_RULE_MISSING" in codes
+
+    def test_cursor_rule_frontmatter_required(self, tmp_path: Path):
+        agents = tmp_path / "AGENTS.md"
+        cursor = tmp_path / ".cursor" / "rules" / "laborer-companion.mdc"
+        cursor.parent.mkdir(parents=True)
+        agents.write_text(
+            "skills/laborer-companion/SKILL.md\n"
+            "references/labor-law-quick-reference.md\n"
+            "references/acute-crisis-escalation.md\n"
+            "Hong Kong and Taiwan\n",
+            encoding="utf-8",
+        )
+        cursor.write_text("@skills/laborer-companion/SKILL.md\n", encoding="utf-8")
+
+        codes = {i.code for i in validate_agent_support_files(agents, cursor)}
+        assert "CURSOR_RULE_NO_FRONTMATTER" in codes
+        assert "CURSOR_RULE_MISSING_FIELD" in codes
+
+
+# ---------------------------------------------------------------------------
 # Smoke tests against the real corpus — these are the gate that protects main
 # ---------------------------------------------------------------------------
 
@@ -380,6 +510,56 @@ class TestRealCorpus:
 
         ids = [c.id for c in load_cases()]
         assert len(ids) == len(set(ids)), f"duplicate case ids: {ids}"
+
+
+# ---------------------------------------------------------------------------
+# Labor-law verification date enforcement
+# ---------------------------------------------------------------------------
+
+
+class TestValidateLaborLawDates:
+    def test_clean_when_all_files_have_date(self, tmp_path: Path):
+        refs = tmp_path / "references"
+        refs.mkdir()
+        for jur in ("foo", "bar"):
+            (refs / f"labor-law-{jur}.md").write_text(
+                "# Labor law\n\n> **Last verified**: 2026-04-29\n",
+                encoding="utf-8",
+            )
+        assert validate_labor_law_dates(refs) == []
+
+    def test_missing_date_is_error(self, tmp_path: Path):
+        refs = tmp_path / "references"
+        refs.mkdir()
+        (refs / "labor-law-foo.md").write_text("# Labor law\n\nno date here\n", encoding="utf-8")
+        issues = validate_labor_law_dates(refs)
+        assert any(i.code == "LABOR_LAW_NO_VERIFICATION_DATE" for i in issues)
+
+    def test_case_insensitive_date_match(self, tmp_path: Path):
+        refs = tmp_path / "references"
+        refs.mkdir()
+        # `Index last verified` (lowercase 'last') should still satisfy the check
+        (refs / "labor-law-foo.md").write_text(
+            "# Labor law\n\n> Index last verified: 2026-04-29\n",
+            encoding="utf-8",
+        )
+        assert validate_labor_law_dates(refs) == []
+
+    def test_no_files_in_corpus_is_error(self, tmp_path: Path):
+        refs = tmp_path / "references"
+        refs.mkdir()
+        # no labor-law-*.md files at all
+        codes = [i.code for i in validate_labor_law_dates(refs)]
+        assert "LABOR_LAW_NO_FILES" in codes
+
+    def test_real_corpus_clean(self):
+        """Smoke test against the real labor-law/* files."""
+        issues = validate_labor_law_dates()
+        date_errors = [i for i in issues if i.code == "LABOR_LAW_NO_VERIFICATION_DATE"]
+        assert date_errors == [], (
+            "Real labor-law files missing `Last verified`:\n"
+            + "\n".join(i.format() for i in date_errors)
+        )
 
 
 # ---------------------------------------------------------------------------

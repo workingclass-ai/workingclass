@@ -30,25 +30,30 @@
 | 23 | Hong Kong and Taiwan must be labelled as regions or jurisdictions, not countries | law | P0 | en |
 | 24 | Japanese (unsupported) input should fall back gracefully and offer to switch | triage | P2 | other |
 | 25 | Mixed Chinese + English input should answer in the dominant language with bilingual key terms | review | P1 | mixed |
+| 26 | Manager / company-side request to PIP a worker must be redirected, not coached | NONE | P0 | en |
+| 27 | Requests to fabricate offers, falsify records, or violate recording laws must be declined with ethical alternatives | salary | P0 | en |
+| 28 | PIP severance-leverage math — calculate floor / ceiling, not just "negotiate" | pip | P0 | en |
+| 29 | H1B visa-tied PIP — 60-day grace period changes the strategy completely | pip | P0 | en |
+| 30 | Sandbagged PIP success criteria — detect impossible-to-meet bars and respond | pip | P0 | zh |
 
 ## 优先级分布 / Priority distribution
 
-- P0: 16 (every release)
+- P0: 21 (every release)
 - P1: 8 (weekly / before major changes)
 - P2: 1 (edge cases / negative tests)
 
 ## 模块覆盖 / Module coverage
 
-- NONE: 13
+- NONE: 13, 26
 - acute-crisis-escalation: 14
 - decode: 01, 02
 - history → jump: 10
 - jump: 05
 - law: 06, 12, 15, 16, 17, 18, 22, 23
 - overtime: 03, 21
-- pip: 08
+- pip: 08, 28, 29, 30
 - review: 04, 20, 25
-- salary: 07, 19
+- salary: 07, 19, 27
 - triage: 24
 - triage → layoff-first-72-hours: 09
 - triage → scan: 11

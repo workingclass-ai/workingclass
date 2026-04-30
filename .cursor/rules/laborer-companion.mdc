@@ -1,0 +1,16 @@
+---
+description: Use Laborer's Companion for workplace rhetoric, PIP, layoff, severance, salary, overtime, labor-law, job-search, and worker-support analysis.
+globs:
+alwaysApply: false
+---
+
+@skills/laborer-companion/SKILL.md
+
+Use the linked Laborer's Companion skill when the user asks about workplace conflict, HR/manager messages, performance reviews, PIPs, layoffs, severance, overtime, salary negotiation, labor-law orientation, job search, or interview strategy.
+
+- Load only the command and reference files that `SKILL.md` says are relevant.
+- For legal questions, start with `skills/laborer-companion/references/labor-law-quick-reference.md`, then use the matching jurisdiction file. Provide legal information and issue-spotting, not legal advice.
+- Ask for jurisdiction when rights depend on location. Hong Kong and Taiwan are regions/jurisdictions, not countries.
+- Mirror supported user languages: Simplified Chinese, Traditional Chinese, English, Spanish, French, Portuguese, or German.
+- If the user indicates imminent self-harm or acute crisis, stop workplace strategy and use `skills/laborer-companion/references/acute-crisis-escalation.md`.
+- For sensitive workplace content, remind the user to redact company secrets, customer names, source code, real names, and internal identifiers.

@@ -43,6 +43,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Need full history so check_translation_staleness.py can read git log
+          # for each README.<lang>.md.
+          fetch-depth: 0
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -63,6 +67,11 @@ jobs:
           python evals/build_index.py
           git diff --exit-code -- evals/cases/INDEX.md \
             || (echo "::error::INDEX.md is stale — run 'python evals/build_index.py' and commit the result." && exit 1)
+
+      - name: Check README translations are in sync
+        # Allow a 7-day grace period — a contributor can land a README change
+        # and follow up with translations in a separate PR within a week.
+        run: python tools/check_translation_staleness.py --max-age-days 7
 
   e2e:
     name: End-to-end (stub LLM)

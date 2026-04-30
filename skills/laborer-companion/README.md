@@ -54,10 +54,16 @@ This tool's goal is to give you an assistant that can see through these tactics.
 mkdir -p "${CODEX_HOME:-$HOME/.codex}/skills"
 cp -R laborer-companion/ "${CODEX_HOME:-$HOME/.codex}/skills/"
 
+# Cursor
+# From the repository root, Cursor uses .cursor/rules/laborer-companion.mdc.
+# To use this skill in another Cursor project, copy this directory and the rule file.
+
 # Claude Code（如果你使用 legacy Claude skills）
 mkdir -p ~/.claude/skills
 cp -R laborer-companion/ ~/.claude/skills/
 ```
+
+Codex support is provided by `agents/openai.yaml`. Cursor support is provided at the repository root by `.cursor/rules/laborer-companion.mdc`; root `AGENTS.md` provides shared agent instructions for Codex/Cursor-compatible agents.
 
 ### 2. 触发使用 / Use it
 
@@ -318,6 +324,18 @@ laborer-companion/
     ├── salary.md
     ├── pip.md
     └── jobsearch.md
+```
+
+Repository-level support files:
+
+```
+workingclass/
+├── AGENTS.md                             # Codex / Cursor-compatible agent guidance
+├── .cursor/
+│   └── rules/
+│       └── laborer-companion.mdc          # Cursor Project Rule
+└── skills/
+    └── laborer-companion/
 ```
 
 ## 隐私与安全 / Privacy & Security

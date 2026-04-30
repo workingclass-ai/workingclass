@@ -56,6 +56,10 @@ cd workingclass
 mkdir -p "${CODEX_HOME:-$HOME/.codex}/skills"
 cp -R skills/laborer-companion "${CODEX_HOME:-$HOME/.codex}/skills/"
 
+# Cursor
+# 打開本倉庫時，Cursor 會讀取 .cursor/rules/laborer-companion.mdc。
+# 如果要在另一個 repo 使用，複製 skills/laborer-companion/ 和 .cursor/rules/laborer-companion.mdc。
+
 # Claude Code（如果你使用 legacy Claude skills）
 mkdir -p ~/.claude/skills
 cp -R skills/laborer-companion ~/.claude/skills/
@@ -76,6 +80,16 @@ cp -R skills/laborer-companion ~/.claude/skills/
 /pip         - PIP應對
 /jobsearch   - 找工作和面試
 ```
+
+---
+
+## Codex / Cursor 支援
+
+- **Codex**：skill 位於 `skills/laborer-companion/`；UI metadata 位於 `skills/laborer-companion/agents/openai.yaml`。安裝到 `${CODEX_HOME:-$HOME/.codex}/skills/` 後，可用 `$laborer-companion` 觸發。
+- **Cursor**：本倉庫包含 Cursor Project Rule：`.cursor/rules/laborer-companion.mdc`。在 Cursor 打開本倉庫時，Agent 可按該 rule 調用 `skills/laborer-companion/SKILL.md`。
+- **通用 agent 指南**：根目錄 `AGENTS.md` 提供 Codex / Cursor 相容的倉庫級使用說明。
+
+如果要把這個 skill 移植到別的專案，複製 `skills/laborer-companion/`、`.cursor/rules/laborer-companion.mdc` 和 `AGENTS.md`，並保持 rule 裡的路徑一致。
 
 ---
 
