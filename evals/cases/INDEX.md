@@ -35,19 +35,24 @@
 | 28 | PIP severance-leverage math — calculate floor / ceiling, not just "negotiate" | pip | P0 | en |
 | 29 | H1B visa-tied PIP — 60-day grace period changes the strategy completely | pip | P0 | en |
 | 30 | Sandbagged PIP success criteria — detect impossible-to-meet bars and respond | pip | P0 | zh |
+| 31 | Recruiter combines salary-history question + 24-hour deadline — interview anti-manipulation | jobsearch | P1 | en |
+| 32 | AI agent replacing the team — historical perspective standalone (no jump decision yet) | history | P1 | zh |
+| 33 | Financial planning is out of scope — redirect to fiduciary advisor without giving advice | NONE | P2 | en |
 
 ## 优先级分布 / Priority distribution
 
 - P0: 21 (every release)
-- P1: 8 (weekly / before major changes)
-- P2: 1 (edge cases / negative tests)
+- P1: 10 (weekly / before major changes)
+- P2: 2 (edge cases / negative tests)
 
 ## 模块覆盖 / Module coverage
 
-- NONE: 13, 26
+- NONE: 13, 26, 33
 - acute-crisis-escalation: 14
 - decode: 01, 02
+- history: 32
 - history → jump: 10
+- jobsearch: 31
 - jump: 05
 - law: 06, 12, 15, 16, 17, 18, 22, 23
 - overtime: 03, 21
