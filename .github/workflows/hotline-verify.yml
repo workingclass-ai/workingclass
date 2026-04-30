@@ -22,7 +22,7 @@ jobs:
     name: Open quarterly verification issue
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Read current stamp
         id: stamp
