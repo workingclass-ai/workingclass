@@ -5,6 +5,8 @@ allowed-tools: Read
 
 # 历史视角咨询 / Historical Perspective Consultation
 
+> **Language / 语言**: Mirror the user's input language (zh-Hans, zh-Hant, en, es, fr, pt, de fully supported; best-effort for others). See `references/language-and-localization.md`.
+
 Help the user see their current workplace dilemma in the context of 150 years of labor history. Most "unprecedented" 2026 workplace problems have very close historical parallels.
 
 ## Step 1: Read the historical case library

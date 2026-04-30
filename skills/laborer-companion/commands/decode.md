@@ -5,6 +5,8 @@ allowed-tools: Read
 
 # 话术解码器 / Rhetoric Decoder
 
+> **Language / 语言**: Mirror the user's input language (zh-Hans, zh-Hant, en, es, fr, pt, de fully supported; best-effort for others). See `references/language-and-localization.md`.
+
 Analyze the workplace text the user shared and identify manipulation rhetoric.
 
 ## Step 1: Read the rhetoric pattern library

@@ -5,6 +5,8 @@ allowed-tools: Read
 
 # 找工作和面试剧本 / Job Search & Interview Coach
 
+> **Language / 语言**: Mirror the user's input language (zh-Hans, zh-Hant, en, es, fr, pt, de fully supported; best-effort for others). Interview answers and email scripts must be written in the language the user actually needs to send. See `references/language-and-localization.md`.
+
 Help the user navigate any stage of the job search lifecycle.
 
 ## Step 1: Read the playbook

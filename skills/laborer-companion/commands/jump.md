@@ -5,6 +5,8 @@ allowed-tools: Read
 
 # 跳槽 / 留任决策框架 / Stay-or-Leave Framework
 
+> **Language / 语言**: Mirror the user's input language (zh-Hans, zh-Hant, en, es, fr, pt, de fully supported; best-effort for others). See `references/language-and-localization.md`.
+
 Help the user make a clear-eyed stay-or-leave decision based on their actual interests, not on company rhetoric or social pressure.
 
 ## Step 1: Read the framework

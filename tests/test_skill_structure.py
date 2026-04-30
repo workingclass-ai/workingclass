@@ -296,6 +296,26 @@ class TestValidateCaseFile:
         codes = [i.code for i in validate_case_file(path)]
         assert "CASE_BAD_PRIORITY" in codes
 
+    def test_bad_input_lang(self, tmp_path: Path):
+        path = tmp_path / "case.md"
+        # `ge` is a common typo for German (`de`) — must be flagged
+        path.write_text(
+            _case_text().replace("input_lang: zh", "input_lang: ge"),
+            encoding="utf-8",
+        )
+        codes = [i.code for i in validate_case_file(path)]
+        assert "CASE_BAD_LANG" in codes
+
+    @pytest.mark.parametrize("lang", ["zh", "zh-Hans", "zh-Hant", "en", "es", "fr", "pt", "de", "mixed", "other"])
+    def test_supported_input_langs_accepted(self, tmp_path: Path, lang: str):
+        path = tmp_path / "case.md"
+        path.write_text(
+            _case_text().replace("input_lang: zh", f"input_lang: {lang}"),
+            encoding="utf-8",
+        )
+        codes = [i.code for i in validate_case_file(path)]
+        assert "CASE_BAD_LANG" not in codes
+
     def test_missing_section(self, tmp_path: Path):
         path = tmp_path / "case.md"
         path.write_text(
@@ -360,3 +380,60 @@ class TestRealCorpus:
 
         ids = [c.id for c in load_cases()]
         assert len(ids) == len(set(ids)), f"duplicate case ids: {ids}"
+
+
+# ---------------------------------------------------------------------------
+# Multilingual README consistency
+# ---------------------------------------------------------------------------
+
+
+class TestMultilingualReadmes:
+    """Make sure every language README exists, mutually links, and has a switcher
+    line as the second non-empty line. Catches contributors who add a translation
+    but forget to update the switcher in the others."""
+
+    EXPECTED = {
+        "README.md": "简体中文",
+        "README.en.md": "English",
+        "README.zh-TW.md": "繁體中文",
+        "README.es.md": "Español",
+        "README.fr.md": "Français",
+        "README.pt.md": "Português",
+        "README.de.md": "Deutsch",
+    }
+
+    def _switcher_line(self, path: Path) -> str:
+        text = path.read_text(encoding="utf-8")
+        for line in text.splitlines():
+            if "README." in line or "[简体中文]" in line:
+                return line
+        return ""
+
+    def test_all_readmes_exist(self, repo_root: Path):
+        for filename in self.EXPECTED:
+            assert (repo_root / filename).exists(), f"missing {filename}"
+
+    def test_each_readme_links_to_every_other(self, repo_root: Path):
+        for filename, current_label in self.EXPECTED.items():
+            path = repo_root / filename
+            switcher = self._switcher_line(path)
+            assert switcher, f"{filename} has no language switcher line"
+            for other_filename in self.EXPECTED:
+                if other_filename == filename:
+                    # current language must be marked (bold), not linked
+                    assert (
+                        f"**{current_label}**" in switcher
+                    ), f"{filename} should mark its own language `{current_label}` as bold"
+                else:
+                    assert (
+                        f"({other_filename})" in switcher
+                    ), f"{filename} switcher missing link to {other_filename}"
+
+    def test_each_readme_has_distinct_current_marker(self, repo_root: Path):
+        # the bold (`**…**`) marker should appear exactly once per switcher
+        for filename in self.EXPECTED:
+            switcher = self._switcher_line(repo_root / filename)
+            bold_count = switcher.count("**") // 2
+            assert bold_count == 1, (
+                f"{filename} switcher should bold exactly one language, got {bold_count}"
+            )

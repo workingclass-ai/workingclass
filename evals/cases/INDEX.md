@@ -28,11 +28,14 @@
 | 21 | Portuguese overtime analysis should answer in Portuguese | overtime | P1 | pt |
 | 22 | German legal question should answer in German and route through EU/member-state framing | law | P1 | de |
 | 23 | Hong Kong and Taiwan must be labelled as regions or jurisdictions, not countries | law | P0 | en |
+| 24 | Japanese (unsupported) input should fall back gracefully and offer to switch | triage | P2 | other |
+| 25 | Mixed Chinese + English input should answer in the dominant language with bilingual key terms | review | P1 | mixed |
 
 ## 优先级分布 / Priority distribution
 
 - P0: 16 (every release)
-- P1: 7 (weekly / before major changes)
+- P1: 8 (weekly / before major changes)
+- P2: 1 (edge cases / negative tests)
 
 ## 模块覆盖 / Module coverage
 
@@ -44,8 +47,9 @@
 - law: 06, 12, 15, 16, 17, 18, 22, 23
 - overtime: 03, 21
 - pip: 08
-- review: 04, 20
+- review: 04, 20, 25
 - salary: 07, 19
+- triage: 24
 - triage → layoff-first-72-hours: 09
 - triage → scan: 11
 

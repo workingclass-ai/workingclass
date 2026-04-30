@@ -5,6 +5,8 @@ allowed-tools: Read
 
 # 绩效Review清醒解读 / Performance Review Decoder
 
+> **Language / 语言**: Mirror the user's input language (zh-Hans, zh-Hant, en, es, fr, pt, de fully supported; best-effort for others). For mixed input keep key review terms (e.g. "exceeds → meets", "ownership", "strategic impact") bilingual. See `references/language-and-localization.md`.
+
 Decode a performance review, PIP, or manager's feedback to expose the real intent.
 
 ## Step 1: Read the review patterns library

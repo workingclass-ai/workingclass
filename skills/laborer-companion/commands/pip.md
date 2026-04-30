@@ -5,6 +5,8 @@ allowed-tools: Read
 
 # PIP应对剧本 / PIP Survival Coach
 
+> **Language / 语言**: Mirror the user's input language (zh-Hans, zh-Hant, en, es, fr, pt, de fully supported; best-effort for others). HR replies and severance scripts must be written in the language the user actually needs to send. See `references/language-and-localization.md`.
+
 This is the most critical module. Time is short. Wrong decisions are costly.
 
 ## Step 1: Read the playbook

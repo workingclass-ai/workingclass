@@ -5,6 +5,8 @@ allowed-tools: Read
 
 # 加班决策计算器 / Overtime Decision Calculator
 
+> **Language / 语言**: Mirror the user's input language (zh-Hans, zh-Hant, en, es, fr, pt, de fully supported; best-effort for others). See `references/language-and-localization.md`.
+
 Help the user make a clear-eyed decision about a specific overtime, weekend work, or extra-scope request.
 
 ## Step 1: Read the overtime analysis framework

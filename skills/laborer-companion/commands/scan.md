@@ -5,6 +5,8 @@ allowed-tools: Read
 
 # 红旗扫描 / Red-Flag Scan
 
+> **Language / 语言**: Mirror the user's input language (zh-Hans, zh-Hant, en, es, fr, pt, de fully supported; best-effort for others). See `references/language-and-localization.md`.
+
 ## 你的任务
 
 读取 `references/red-flag-scanner.md`，把信号清单**逐项**问用户（按 A→B→C→D→E 的顺序），最后给出评分和对应建议。

@@ -5,6 +5,8 @@ allowed-tools: Read
 
 # 分诊入口 / Triage
 
+> **Language / 语言**: Mirror the user's input language (zh-Hans, zh-Hant, en, es, fr, pt, de fully supported; for others give a best-effort short reply, disclose limited support, and offer to switch). See `references/language-and-localization.md`.
+
 很多用户带着一个模糊的"我感觉不对劲"来找你，但不知道这是话术问题、PIP预警、还是该跳槽了。这个命令是分诊台。
 
 ## 你的任务

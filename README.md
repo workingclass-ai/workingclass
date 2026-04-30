@@ -1,5 +1,7 @@
 # workingclass
 
+**简体中文** · [English](README.en.md) · [繁體中文](README.zh-TW.md) · [Español](README.es.md) · [Français](README.fr.md) · [Português](README.pt.md) · [Deutsch](README.de.md)
+
 > 站在劳动者一边的 AI 工具集。
 > AI tools that stand on the side of workers.
 

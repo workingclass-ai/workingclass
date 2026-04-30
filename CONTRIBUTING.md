@@ -47,16 +47,39 @@
 
 放到对应模块的 `references/case-studies.md`（如果还不存在就新建）。**至少脱敏到外人看不出是你 + 你的公司**。
 
-### 5. 翻译
+### 5. 翻译 / Translations
 
-目前主要语言是中文（简体）+ 英文。欢迎补充：
-- 繁体中文
-- 西班牙语
-- 葡萄牙语
-- 印地语
-- 任何其他语言
+skill 当前在七种语言里有完整支持：简体中文、繁體中文、English、Español、Français、Português、Deutsch。运行时的语言行为规则放在 `skills/laborer-companion/references/language-and-localization.md`。
 
-新建 `skills/laborer-companion/references/translations/<language>/` 目录。
+#### 5a. 翻译用户面向的 README
+
+仓库根目录有以下多语言 README，使用 [BCP 47](https://www.rfc-editor.org/rfc/bcp/bcp47.txt) 语言代码命名：
+
+| 文件 | 语言 |
+|------|------|
+| `README.md` | 默认（简体中文 + 英文双语） |
+| `README.en.md` | English |
+| `README.zh-TW.md` | 繁體中文 |
+| `README.es.md` | Español |
+| `README.fr.md` | Français |
+| `README.pt.md` | Português |
+| `README.de.md` | Deutsch |
+
+如果你要：
+
+- **修正某语言版本的翻译错误**：直接编辑对应的 `README.<lang>.md`，PR 标题写 `docs(<lang>): fix translation of ...`。
+- **新增一种支持语言**（例如日语 `ja`、韩语 `ko`）：先开 issue 讨论，理由 + 维护人 + BCP 47 代码。被接受后：
+  1. 新建 `README.<bcp47>.md` 并加上语言切换器（参考现有 README 顶部的链接行）。
+  2. 在所有现有的 README 顶部链接行里加上你的新 README。
+  3. 在 `skills/laborer-companion/references/language-and-localization.md` 的"支持的输出语言"里加上对应代码。
+  4. 在 `evals/validate_structure.py` 的 `ALLOWED_INPUT_LANGS` 里加上代码。
+  5. 至少加一个该语言的 P1 eval case 到 `evals/cases/`。
+
+**保持各语言版本结构同步**——加一节内容时，主 README 加完后请也在其他语言版本里加同一节（占位也行，并标注 "TODO: translation needed"）。
+
+#### 5b. 翻译 reference / command 文件
+
+目前 `references/` 和 `commands/` 主要是中文+英文双语。短期内不计划全部翻译——这些是给 LLM 看的内部文档，多语言由运行时镜像规则解决。如果你想试做某个 reference 的完整其它语言版本，先开 issue 讨论。
 
 ### 6. 工具改进
 

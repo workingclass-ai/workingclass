@@ -33,6 +33,20 @@ CASES_DIR = REPO_ROOT / "evals" / "cases"
 REQUIRED_CASE_FIELDS = ("id", "title", "module_expected", "priority", "input_lang")
 REQUIRED_CASE_SECTIONS = ("输入", "必须出现")
 ALLOWED_PRIORITIES = {"P0", "P1", "P2"}
+# Supported language codes — keep in sync with references/language-and-localization.md
+# and the README language switcher. Use BCP 47 forms.
+ALLOWED_INPUT_LANGS = {
+    "zh",       # Simplified Chinese (default)
+    "zh-Hans",  # Explicit Simplified
+    "zh-Hant",  # Traditional Chinese
+    "en",       # English
+    "es",       # Spanish
+    "fr",       # French
+    "pt",       # Portuguese
+    "de",       # German
+    "mixed",    # Mixed-language input — exercise of the "dominant language" rule
+    "other",    # Unsupported language — exercise of the fallback path
+}
 COMMAND_REQUIRED_FRONTMATTER = ("description",)
 
 
@@ -243,6 +257,17 @@ def validate_case_file(path: Path) -> list[Issue]:
                 "CASE_BAD_PRIORITY",
                 path,
                 f"priority `{priority}` not in {sorted(ALLOWED_PRIORITIES)}",
+            )
+        )
+
+    input_lang = fm.get("input_lang", "").strip()
+    if input_lang and input_lang not in ALLOWED_INPUT_LANGS:
+        issues.append(
+            Issue(
+                Severity.ERROR,
+                "CASE_BAD_LANG",
+                path,
+                f"input_lang `{input_lang}` not in {sorted(ALLOWED_INPUT_LANGS)}",
             )
         )
 

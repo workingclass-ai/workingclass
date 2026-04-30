@@ -5,6 +5,8 @@ allowed-tools: Read
 
 # 劳动法快速查询 / Labor Law Quick Reference
 
+> **Language / 语言**: Mirror the user's input language (zh-Hans, zh-Hant, en, es, fr, pt, de fully supported; best-effort for others). Keep statute names and agencies in the official original; add a short translation if useful. Hong Kong / Taiwan / EU are jurisdictions/regions, never "countries". See `references/language-and-localization.md`.
+
 Help the user understand their labor rights in their specific jurisdiction.
 
 ## Important Disclaimer
