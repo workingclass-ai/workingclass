@@ -17,6 +17,15 @@ Examples:
 - `RESULTS-2026-05-15-gpt-5-1.json`
 - `BASELINE-stub.json` — recording produced from the deterministic stub LLM in `tests/fixtures/`. **This is a pipeline baseline, not a content baseline** — the stub emits generic text, so its verdict distribution is meaningless. Its value is that any regression in the schema, runner, or diff tooling shows up immediately when comparing a fresh stub run against this committed reference.
 
+## Two ways to run real-LLM recordings
+
+| Mode | Command | Memory isolation | When to use |
+|------|---------|------------------|-------------|
+| **API mode (recommended)** | `make eval-record-api MODEL=claude-opus-4-7` | ✅ — uses Anthropic SDK directly with only `SKILL.md` as system prompt. Does NOT load `~/.claude/CLAUDE.md` or any project memory. | Default. Producing recordings worth committing. |
+| **CLI mode** | `make eval-record LLM=claude` | ❌ — spawns `claude --print` which auto-loads memory files. Recordings can leak personal context from `CLAUDE.md` into the model's responses. | Only when you specifically want to test the full Claude-Code-with-memory experience. **Do not commit recordings from this mode** without manually scrubbing them. |
+
+Always prefer **API mode** for any recording that lands in a public commit.
+
 ## Schema (v1)
 
 ```jsonc

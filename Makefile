@@ -5,7 +5,7 @@
 PY ?= python
 PYTEST ?= pytest
 
-.PHONY: help install test test-unit test-e2e validate validate-strict index check-translations eval-record eval-diff eval-baseline all clean
+.PHONY: help install test test-unit test-e2e validate validate-strict index check-translations eval-record eval-record-api eval-diff eval-baseline all clean
 
 help: ## Show this message
 	@awk 'BEGIN {FS = ":.*##"; printf "Targets:\n"} /^[a-zA-Z_-]+:.*##/ {printf "  \033[36m%-22s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -33,14 +33,27 @@ index: ## Rebuild evals/cases/INDEX.md
 check-translations: ## Flag README translations that lag behind README.md
 	$(PY) tools/check_translation_staleness.py
 
-eval-record: ## Run evals against $$LLM (default: claude) and write evals/runs/RESULTS-<date>-<model>.json. Costs API tokens.
+eval-record: ## CLI mode (subprocess; inherits Claude Code memory). Use eval-record-api for memory-isolated.
 	@if [ -z "$(LLM)" ]; then LLM=claude; fi; \
 	DATE=$$(date -u +%Y-%m-%d); \
 	TAG=$${TAG:-$$LLM}; \
 	OUT=evals/runs/RESULTS-$$DATE-$$TAG.json; \
-	echo "Recording to $$OUT (LLM=$$LLM). Press Ctrl-C to abort."; \
+	echo "Recording to $$OUT (LLM=$$LLM)."; \
+	echo "⚠ This runs the LLM as a subprocess; it inherits CLAUDE.md memory."; \
+	echo "  For a memory-isolated run, use 'make eval-record-api' instead."; \
 	sleep 2; \
 	$(PY) evals/run_evals.py --auto --llm-command "$$LLM" --record "$$OUT"
+
+eval-record-api: ## Memory-isolated run via Anthropic SDK. Requires $$ANTHROPIC_API_KEY. Set MODEL=... to override.
+	@if [ -z "$$ANTHROPIC_API_KEY" ]; then echo "ANTHROPIC_API_KEY is not set."; exit 2; fi; \
+	DATE=$$(date -u +%Y-%m-%d); \
+	MODEL=$${MODEL:-claude-opus-4-7}; \
+	TAG=$${TAG:-$$MODEL-api}; \
+	OUT=evals/runs/RESULTS-$$DATE-$$TAG.json; \
+	echo "Recording to $$OUT via Anthropic SDK (model=$$MODEL)."; \
+	echo "✓ Memory-isolated — does NOT load CLAUDE.md."; \
+	sleep 2; \
+	$(PY) evals/run_evals.py --api --model "$$MODEL" --record "$$OUT"
 
 eval-baseline: ## Regenerate evals/runs/BASELINE-stub.json from the stub LLM (no API needed)
 	$(PY) evals/run_evals.py --auto --llm-command tests/fixtures/stub_llm_pass.sh --record evals/runs/BASELINE-stub.json
