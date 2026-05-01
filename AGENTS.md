@@ -18,7 +18,8 @@ Run these before publishing changes to the skill:
 ```bash
 python evals/build_index.py
 python -m py_compile evals/run_evals.py evals/build_index.py evals/validate_structure.py
-python /Users/larfan/.codex/skills/.system/skill-creator/scripts/quick_validate.py skills/laborer-companion
+# If you have the Codex skill-creator validator installed, also run:
+#   python "${CODEX_HOME:-$HOME/.codex}/skills/.system/skill-creator/scripts/quick_validate.py" skills/laborer-companion
 python evals/validate_structure.py
 python -m pytest
 git diff --check

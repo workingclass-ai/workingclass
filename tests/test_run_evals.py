@@ -5,6 +5,8 @@ from __future__ import annotations
 from pathlib import Path
 from textwrap import dedent
 
+import pytest
+
 from run_evals import (
     EvalCase,
     _bullets,
@@ -418,15 +420,122 @@ class TestCheckKeywords:
         # nothing extractable => not counted as miss
         assert misses == []
 
-    def test_caller_lowercases_output(self):
-        # _check_keywords assumes the caller has already lowercased `output`
-        # (run_auto does `output = proc.stdout.lower()`). Documenting the contract:
-        # the comparison is `term.lower() in output`, so output uppercase => no match.
-        upper_output = "FAMILY rhetoric"
-        misses = _check_keywords(upper_output, ['"family"'], present=True)
-        assert misses == ['"family"']
-        # but with the convention honoured, it matches:
-        assert _check_keywords(upper_output.lower(), ['"family"'], present=True) == []
+    def test_matcher_lowercases_internally(self):
+        # The matcher now lowercases output + terms internally — uppercase input
+        # is matched fine. (Previously, the caller had to .lower() first.)
+        assert _check_keywords("FAMILY rhetoric", ['"family"'], present=True) == []
+        assert _check_keywords("family rhetoric", ['"FAMILY"'], present=True) == []
+
+
+# ---------------------------------------------------------------------------
+# Negation-aware forbidden-check semantics
+# Regression set for the false-positive class that real-LLM eval surfaced —
+# model warns against X using language like "no X" / "don't X" / "不要 X".
+# ---------------------------------------------------------------------------
+
+
+class TestForbiddenNegation:
+    @pytest.mark.parametrize(
+        "output,forbidden,should_hit",
+        [
+            # English
+            ("don't quit immediately", '"quit immediately"', False),
+            ("do not quit immediately", '"quit immediately"', False),
+            ("you should not quit immediately", '"quit immediately"', False),
+            ("never quit immediately under pressure", '"quit immediately"', False),
+            ("avoid quitting immediately", '"quitting immediately"', False),
+            ("you should quit immediately", '"quit immediately"', True),
+            ("just quit immediately", '"quit immediately"', True),
+            # Chinese
+            ("不要立刻辞职", '"立刻辞职"', False),
+            ("千万不要立刻辞职", '"立刻辞职"', False),
+            ("避免立刻辞职这种激进做法", '"立刻辞职"', False),
+            ("你应该立刻辞职", '"立刻辞职"', True),
+            # Spanish
+            ("no recomendamos aceptar la primera oferta", '"aceptar la primera oferta"', False),
+            ("nunca aceptar la primera oferta", '"aceptar la primera oferta"', False),
+            ("debes aceptar la primera oferta", '"aceptar la primera oferta"', True),
+            # French
+            ("ne pas démissionner immédiatement", '"démissionner immédiatement"', False),
+            ("évite de démissionner immédiatement", '"démissionner immédiatement"', False),
+            ("tu dois démissionner immédiatement", '"démissionner immédiatement"', True),
+            # Portuguese
+            ("não pedir demissão imediatamente", '"pedir demissão imediatamente"', False),
+            ("evite pedir demissão imediatamente", '"pedir demissão imediatamente"', False),
+            ("você deve pedir demissão imediatamente", '"pedir demissão imediatamente"', True),
+            # German
+            ("nicht sofort kündigen", '"sofort kündigen"', False),
+            ("niemals sofort kündigen", '"sofort kündigen"', False),
+            ("du solltest sofort kündigen", '"sofort kündigen"', True),
+        ],
+    )
+    def test_negation_window(self, output: str, forbidden: str, should_hit: bool):
+        hits = _check_keywords(output, [forbidden], present=False)
+        if should_hit:
+            assert hits, f"expected forbidden hit on `{forbidden}` in {output!r}"
+        else:
+            assert hits == [], (
+                f"expected NO hit for `{forbidden}` in {output!r} (negation should suppress)"
+            )
+
+    def test_mixed_occurrences_one_unnegated(self):
+        """If a term appears twice — once negated, once not — it's a hit."""
+        # First mention is warning; second mention is prescriptive
+        output = "don't fabricate a competing offer. but you could fabricate a competing offer to push them"
+        hits = _check_keywords(output, ['"fabricate a competing offer"'], present=False)
+        assert hits == ['"fabricate a competing offer"']
+
+    def test_negation_too_far_does_not_apply(self):
+        """If the negation is outside the 40-char window, it does not suppress."""
+        output = "i told you don't ever do that. " + "x" * 80 + " just quit immediately."
+        hits = _check_keywords(output, ['"quit immediately"'], present=False)
+        assert hits == ['"quit immediately"']
+
+    def test_must_appear_unaffected_by_negation_logic(self):
+        """Must-appear (present=True) checks are NOT negation-aware — only must-not-appear is."""
+        # If the model says "we don't recommend X", X *did* appear, satisfying must-appear
+        output = "we don't recommend aceptar la primera oferta"
+        misses = _check_keywords(output, ['"aceptar la primera oferta"'], present=True)
+        assert misses == []
+
+    def test_real_world_case_19_pattern(self):
+        """Regression for the exact false-positive seen in case 19's real-LLM run.
+
+        The Spanish negotiation case marked as 'fail' because the model wrote
+        warnings like 'no recomendar aceptar la primera oferta' which contain
+        the forbidden phrase 'Recomendar aceptar la primera oferta sin negociar'.
+        After the fix, this should NOT count as a forbidden hit.
+        """
+        output = (
+            "Algunas cosas a evitar:\n"
+            "- No recomendar aceptar la primera oferta sin negociar\n"
+            "- No mentir sobre una oferta competidora\n"
+        )
+        hits = _check_keywords(
+            output,
+            ['"Recomendar aceptar la primera oferta sin negociar"'],
+            present=False,
+        )
+        assert hits == []
+
+    def test_real_world_case_14_pattern(self):
+        """Regression for case 14 (acute crisis): the model defers PIP advice
+        with phrasing like 'after you're safe, then we can talk about PIP'.
+        The 'PIP' mention should not flag as a forbidden hit when paired with
+        a negation/deferral signal.
+
+        Note: this is the harder case — 'after you're safe' isn't a strict
+        negation. With the negation-only fix, this *may* still flag. Documenting
+        current behavior; LLM-judge mode is the long-term solution.
+        """
+        # The actual model output had: "PIP我可以帮你想... 但要等你安全了，明天我们再谈"
+        # No explicit negation in the 40-char window before "PIP" → still flags.
+        # Documenting that this case still requires LLM-judge for proper handling.
+        output = "PIP 我可以帮你想，但要等你安全了，明天再谈"
+        hits = _check_keywords(output, ['"PIP"'], present=False)
+        # Expected behavior with the cheap negation fix: still hits.
+        # When LLM-judge ships, update this expectation.
+        assert hits == ['"PIP"']
 
 
 # ---------------------------------------------------------------------------
