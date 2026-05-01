@@ -610,24 +610,42 @@ def _result_to_dict(r: RunResult) -> dict:
 def main() -> int:
     ap = argparse.ArgumentParser(description="laborer-companion eval runner")
     ap.add_argument("--filter", help="regex on filename to filter cases")
-    ap.add_argument("--auto", action="store_true", help="use a headless LLM CLI in --print mode")
+    mode = ap.add_mutually_exclusive_group()
+    mode.add_argument(
+        "--auto",
+        action="store_true",
+        help="use a headless LLM CLI in --print mode (subprocess; inherits env)",
+    )
+    mode.add_argument(
+        "--api",
+        action="store_true",
+        help=(
+            "use the Anthropic SDK directly with SKILL.md as system prompt. "
+            "Memory-isolated — does NOT inherit Claude Code memory files. "
+            "Requires ANTHROPIC_API_KEY."
+        ),
+    )
     ap.add_argument(
         "--llm-command",
         default=os.environ.get("EVAL_LLM_COMMAND", "claude"),
         help="headless LLM command to run before --print (default: env EVAL_LLM_COMMAND or claude)",
     )
     ap.add_argument(
+        "--model",
+        default=os.environ.get("EVAL_MODEL", "claude-opus-4-7"),
+        help="model identifier for --api mode (default: env EVAL_MODEL or claude-opus-4-7)",
+    )
+    ap.add_argument(
         "--record",
         metavar="PATH",
         help=(
             "write a recording JSON for cross-model comparison. "
-            "Implies --auto. Path must end in .json. "
-            "Example: --record evals/runs/RESULTS-2026-04-30-claude-4-7.json"
+            "Implies --auto unless --api is also set. Path must end in .json."
         ),
     )
     args = ap.parse_args()
 
-    if args.record and not args.auto:
+    if args.record and not args.auto and not args.api:
         # Convenience: --record implies --auto since manual mode has no captured output
         args.auto = True
 
@@ -637,10 +655,10 @@ def main() -> int:
             print("ERROR: --record path must end in .json", file=sys.stderr)
             return 2
 
-    if not args.auto and not sys.stdin.isatty():
+    if not args.auto and not args.api and not sys.stdin.isatty():
         print(
             "ERROR: manual mode requires an interactive terminal. "
-            "Run with --auto or execute this script in a real terminal.",
+            "Run with --auto / --api or execute this script in a real terminal.",
             file=sys.stderr,
         )
         return 2
@@ -652,17 +670,24 @@ def main() -> int:
 
     print(f"Loaded {len(cases)} case(s).")
     started_at = datetime.now(timezone.utc)
-    if args.auto:
+    if args.api:
+        # Lazy-import so the rest of run_evals still works without anthropic installed
+        from api_runner import run_api_mode
+        results = run_api_mode(cases, model=args.model)
+    elif args.auto:
         results = run_auto(cases, args.llm_command)
     else:
         results = run_manual(cases)
     ended_at = datetime.now(timezone.utc)
 
     if args.record:
+        # In API mode, "llm_command" semantically means "model"; record both
+        # so the recording is self-describing.
+        recorded_command = f"anthropic-sdk:{args.model}" if args.api else args.llm_command
         path = write_recording(
             results,
             Path(args.record),
-            llm_command=args.llm_command,
+            llm_command=recorded_command,
             started_at=started_at,
             ended_at=ended_at,
         )
