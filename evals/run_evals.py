@@ -345,25 +345,85 @@ def _format_outcome_tail(r: RunResult) -> str:
     return f"FAIL (forbidden patterns appeared: {len(r.forbidden_hits)})"
 
 
+# Negation cues — if a forbidden term appears within NEGATION_WINDOW chars
+# AFTER any of these, the model is warning against the term rather than
+# prescribing it, and we must NOT count the occurrence as a forbidden hit.
+# Patterns are matched case-insensitive, lower-case input expected.
+NEGATION_WINDOW = 40
+NEGATION_PATTERNS = (
+    # Chinese — no word boundaries; CJK has none
+    r"不要|不能|不该|不应|不会|没必要|别|切勿|避免|拒绝|禁止|从不|绝不|从未",
+    # English ("no" alone is too noisy — accept "no <noun>" via the explicit forms below)
+    r"\bdon'?t\b|\bdo not\b|\bdoes not\b|\bdid not\b"
+    r"|\bshouldn'?t\b|\bshould not\b|\bcan'?t\b|\bcannot\b|\bwon'?t\b"
+    r"|\bnever\b|\bno longer\b|\bavoid\w*\b|\brefus\w*\b|\bdeclin\w*\b|\bnot\b",
+    # Spanish — verb stems + flexible ending capture imperative / subjunctive
+    r"\bno\b|\bnunca\b|\bjamás\b|\bevit\w*\b|\brechaz\w*\b|\bsin\b",
+    # French
+    r"\bne\s+(?:pas|jamais|plus|rien)\b|\bjamais\b|\bsans\b"
+    r"|\bévit\w*\b|\brefus\w*\b",
+    # Portuguese
+    r"\bnão\b|\bnunca\b|\bjamais\b|\bevit\w*\b|\brecus\w*\b|\bsem\b",
+    # German
+    r"\bnicht\b|\bnie\b|\bniemals\b|\bkein\w*\b"
+    r"|\bvermeid\w*\b|\blehn\w*\s+\w*\s*ab\b",
+)
+
+
+def _occurrence_negated(output_lower: str, idx: int) -> bool:
+    """Return True if any negation cue appears within NEGATION_WINDOW chars
+    immediately before position `idx`.
+    """
+    start = max(0, idx - NEGATION_WINDOW)
+    preceding = output_lower[start:idx]
+    return any(re.search(pat, preceding, re.IGNORECASE) for pat in NEGATION_PATTERNS)
+
+
+def _term_un_negated(output_lower: str, term: str) -> bool:
+    """Return True if `term` appears at least once in `output_lower` WITHOUT
+    a negation cue in the preceding NEGATION_WINDOW. Used for forbidden checks
+    so that the matcher distinguishes "do X" from "don't do X" / "no X" / "ne pas X".
+    """
+    pos = 0
+    while True:
+        idx = output_lower.find(term, pos)
+        if idx == -1:
+            return False
+        if not _occurrence_negated(output_lower, idx):
+            return True
+        pos = idx + len(term)
+
+
 def _check_keywords(output: str, expectations: list[str], present: bool) -> list[str]:
     """对每个 expectation 做粗略关键词检测。
 
     present=True: 应该出现的——返回**没有**出现的
-    present=False: 不应该出现的——返回**出现了**的
+    present=False: 不应该出现的——返回**真的出现了**的（即否定上下文不计）
 
     粗略提取：优先使用引号、反引号、slash alternatives 里的具体短语。
     避免用 "识别"、"至少" 这类说明词误判为命中。
+
+    Forbidden-check semantics: a term counts as a forbidden hit only if at least
+    one occurrence has NO negation cue (不要 / don't / no / ne pas / não / nicht …)
+    in the 40 chars immediately preceding it. This kills the "model warns against
+    X" → "X is in the warning text" → false-positive cycle.
     """
+    output_lower = output.lower()
     misses_or_hits = []
     for exp in expectations:
         terms = _candidate_terms(exp, present=present)
         if not terms:
             continue
-        any_present = any(t.lower() in output for t in terms)
-        if present and not any_present:
-            misses_or_hits.append(exp[:60])
-        elif not present and any_present:
-            misses_or_hits.append(exp[:60])
+        if present:
+            any_present = any(t.lower() in output_lower for t in terms)
+            if not any_present:
+                misses_or_hits.append(exp[:60])
+        else:
+            any_un_negated = any(
+                _term_un_negated(output_lower, t.lower()) for t in terms
+            )
+            if any_un_negated:
+                misses_or_hits.append(exp[:60])
     return misses_or_hits
 
 
