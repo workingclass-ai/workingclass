@@ -1,5 +1,5 @@
 ---
-description: Help user navigate a Performance Improvement Plan (PIP) or identify PIP warning signs. Walks through warning signs, immediate actions, four strategic options, and severance negotiation. CRITICAL: 85-95% of PIPs end in termination.
+description: Help user navigate a Performance Improvement Plan (PIP) or identify PIP warning signs. Walks through warning signs, immediate actions, four strategic options, and severance negotiation. 85-95% of PIPs end in termination.
 allowed-tools: Read
 ---
 

@@ -29,11 +29,7 @@ If they have pasted text, proceed.
 
 ## Step 3: Pattern matching
 
-For the pasted text, do the following systematically:
-
-1. **Sentence-by-sentence scan**: Go through each sentence in the message.
-2. **Pattern matching**: Compare against the 18 patterns in the reference. Multiple patterns may apply to a single sentence.
-3. **Categorize each detected pattern** with: pattern name, real intent, historical context, and recommended response.
+Compare each sentence against the 18 patterns in the reference; one sentence can match several.
 
 ## Step 4: Output format
 
